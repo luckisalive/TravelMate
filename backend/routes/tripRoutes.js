@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const tripController = require('../controllers/tripController');
 const expenseController = require('../controllers/expenseController');
+const settlementController = require('../controllers/settlementController');
 const { requireAuth } = require('../middleware/auth');
 
 // All trip & expense routes require authentication
@@ -37,7 +38,7 @@ router.get('/:id/expenses/analytics', expenseController.getExpenseAnalytics);
 // GET /api/trips/:id/expenses - List trip expenses with filters
 router.get('/:id/expenses', expenseController.getTripExpenses);
 
-// POST /api/trips/:id/expenses - Log new expense with server-side conversion
+// POST /api/trips/:id/expenses - Log new expense with server-side conversion & splitting
 router.post('/:id/expenses', expenseController.createExpense);
 
 // GET /api/trips/:id/expenses/:expenseId - Single expense details
@@ -48,5 +49,18 @@ router.put('/:id/expenses/:expenseId', expenseController.updateExpense);
 
 // DELETE /api/trips/:id/expenses/:expenseId - Delete expense
 router.delete('/:id/expenses/:expenseId', expenseController.deleteExpense);
+
+// --- Settlement & Debt Simplification Routes ---
+// GET /api/trips/:id/balances - Net balances & greedy debt simplification
+router.get('/:id/balances', settlementController.getTripBalances);
+
+// GET /api/trips/:id/settlements - List recorded settlements for trip
+router.get('/:id/settlements', settlementController.getTripSettlements);
+
+// POST /api/trips/:id/settlements - Log new settlement for trip
+router.post('/:id/settlements', settlementController.recordSettlement);
+
+// DELETE /api/trips/:id/settlements/:settlementId - Delete settlement record
+router.delete('/:id/settlements/:settlementId', settlementController.deleteSettlement);
 
 module.exports = router;

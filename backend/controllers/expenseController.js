@@ -3,7 +3,7 @@ const { convertToBase } = require('../utils/currency');
 
 const VALID_CATEGORIES = ['Food', 'Transport', 'Stay', 'Activity', 'Shopping', 'Other'];
 
-// Helper to verify user has access to trip
+// Helper to verify user has access to trip (IDOR protection per ADR-010)
 async function verifyTripMembership(userId, tripId) {
   const result = await db.query(
     `SELECT t.id, t.name, t.budget, t.base_currency, t.created_by, tm.role
@@ -19,7 +19,145 @@ async function verifyTripMembership(userId, tripId) {
   return result.rows[0];
 }
 
-// GET /api/trips/:id/expenses - List all expenses for a trip
+/**
+ * Resolves and validates split rows for an expense.
+ * Handles equal split with penny distribution, custom splits with sum verification, or none.
+ */
+async function resolveSplits({ client, tripId, totalAmount, amountBase, splitType = 'equal', splits, splitMembers, payerId }) {
+  if (splitType === 'none' || splitType === 'personal') {
+    return { splits: [], split_type: 'none' };
+  }
+
+  // Get all valid members of the trip (creator + trip_members)
+  const membersRes = await client.query(
+    `SELECT DISTINCT u.id, u.name, u.email
+     FROM users u
+     LEFT JOIN trip_members tm ON u.id = tm.user_id AND tm.trip_id = $1
+     JOIN trips t ON t.id = $1
+     WHERE u.id = t.created_by OR tm.trip_id = $1`,
+    [tripId]
+  );
+  const tripMembers = membersRes.rows;
+  const memberIdSet = new Set(tripMembers.map((m) => m.id));
+
+  const resolvedSplits = [];
+
+  if (splitType === 'custom') {
+    if (!Array.isArray(splits) || splits.length === 0) {
+      const err = new Error('Custom splits must be provided as a non-empty array of { user_id, amount_owed }.');
+      err.status = 400;
+      throw err;
+    }
+
+    let sumOwed = 0;
+    for (const s of splits) {
+      const uId = parseInt(s.user_id, 10);
+      const owed = parseFloat(s.amount_owed);
+      if (isNaN(uId) || !memberIdSet.has(uId)) {
+        const err = new Error(`User ID ${s.user_id} in splits is not an active member of this trip.`);
+        err.status = 400;
+        throw err;
+      }
+      if (isNaN(owed) || owed <= 0) {
+        const err = new Error('Split amount for each member must be a positive number greater than 0.');
+        err.status = 400;
+        throw err;
+      }
+      sumOwed += owed;
+    }
+
+    // Check sum of custom splits equals totalAmount (with 0.05 float tolerance)
+    if (Math.abs(sumOwed - totalAmount) > 0.05) {
+      const err = new Error(`Sum of split amounts (${sumOwed.toFixed(2)}) must equal total expense amount (${totalAmount.toFixed(2)}).`);
+      err.status = 400;
+      throw err;
+    }
+
+    // Allocate base amounts proportionately
+    let totalAllocatedBase = 0;
+    for (let i = 0; i < splits.length; i++) {
+      const s = splits[i];
+      const uId = parseInt(s.user_id, 10);
+      const owed = parseFloat(parseFloat(s.amount_owed).toFixed(2));
+      let owedBase;
+
+      if (i === splits.length - 1) {
+        // Last split absorbs any penny discrepancy in amountBase
+        owedBase = parseFloat((amountBase - totalAllocatedBase).toFixed(2));
+      } else {
+        owedBase = parseFloat(((owed / totalAmount) * amountBase).toFixed(2));
+        totalAllocatedBase += owedBase;
+      }
+
+      const memInfo = tripMembers.find((m) => m.id === uId);
+      resolvedSplits.push({
+        user_id: uId,
+        user_name: memInfo ? memInfo.name : '',
+        user_email: memInfo ? memInfo.email : '',
+        amount_owed: owed,
+        amount_owed_base: owedBase,
+      });
+    }
+
+    return { splits: resolvedSplits, split_type: 'custom' };
+  }
+
+  // Otherwise: Equal split
+  // Determine participants: splitMembers, or splits array with user_ids, or all trip members
+  let targetUserIds = [];
+  if (Array.isArray(splitMembers) && splitMembers.length > 0) {
+    targetUserIds = splitMembers.map((id) => parseInt(id, 10));
+  } else if (Array.isArray(splits) && splits.length > 0) {
+    targetUserIds = splits.map((s) => (typeof s === 'object' ? parseInt(s.user_id, 10) : parseInt(s, 10)));
+  } else {
+    targetUserIds = tripMembers.map((m) => m.id);
+  }
+
+  // Deduplicate
+  targetUserIds = [...new Set(targetUserIds)];
+
+  for (const uId of targetUserIds) {
+    if (!memberIdSet.has(uId)) {
+      const err = new Error(`User ID ${uId} is not a member of this trip.`);
+      err.status = 400;
+      throw err;
+    }
+  }
+
+  const numParticipants = targetUserIds.length;
+  if (numParticipants === 0) {
+    return { splits: [], split_type: 'none' };
+  }
+
+  // Distribute totalAmount in integer cents to ensure exact sum
+  const totalCents = Math.round(totalAmount * 100);
+  const baseShareCents = Math.floor(totalCents / numParticipants);
+  const remainderCents = totalCents % numParticipants;
+
+  // Distribute amountBase in integer cents
+  const totalBaseCents = Math.round(amountBase * 100);
+  const baseShareBaseCents = Math.floor(totalBaseCents / numParticipants);
+  const remainderBaseCents = totalBaseCents % numParticipants;
+
+  for (let i = 0; i < numParticipants; i++) {
+    const uId = targetUserIds[i];
+    const shareCents = baseShareCents + (i < remainderCents ? 1 : 0);
+    const shareBaseCents = baseShareBaseCents + (i < remainderBaseCents ? 1 : 0);
+
+    const memInfo = tripMembers.find((m) => m.id === uId);
+    resolvedSplits.push({
+      user_id: uId,
+      user_name: memInfo ? memInfo.name : '',
+      user_email: memInfo ? memInfo.email : '',
+      amount_owed: parseFloat((shareCents / 100).toFixed(2)),
+      amount_owed_base: parseFloat((shareBaseCents / 100).toFixed(2)),
+    });
+  }
+
+  return { splits: resolvedSplits, split_type: 'equal' };
+}
+
+// GET /api/trips/:id/expenses - List all expenses for a trip with attached split details
 async function getTripExpenses(req, res, next) {
   try {
     const tripId = parseInt(req.params.id, 10);
@@ -73,21 +211,60 @@ async function getTripExpenses(req, res, next) {
 
     const result = await db.query(queryText, params);
 
-    const expenses = result.rows.map((row) => ({
-      id: row.id,
-      trip_id: row.trip_id,
-      paid_by: row.paid_by,
-      paid_by_name: row.paid_by_name,
-      paid_by_email: row.paid_by_email,
-      category: row.category,
-      amount: parseFloat(row.amount),
-      currency: row.currency,
-      amount_base: parseFloat(row.amount_base),
-      rate_used: parseFloat(row.rate_used),
-      date: typeof row.date === 'string' ? row.date.split('T')[0] : new Date(row.date).toISOString().split('T')[0],
-      note: row.note || '',
-      created_at: row.created_at,
-    }));
+    // Fetch all splits for this trip's expenses
+    const splitsResult = await db.query(
+      `SELECT es.id, es.expense_id, es.user_id, es.amount_owed, es.amount_owed_base,
+              u.name AS user_name, u.email AS user_email
+       FROM expense_splits es
+       JOIN users u ON es.user_id = u.id
+       JOIN expenses e ON es.expense_id = e.id
+       WHERE e.trip_id = $1
+       ORDER BY es.id ASC`,
+      [tripId]
+    );
+
+    const splitsByExpense = {};
+    for (const s of splitsResult.rows) {
+      if (!splitsByExpense[s.expense_id]) {
+        splitsByExpense[s.expense_id] = [];
+      }
+      splitsByExpense[s.expense_id].push({
+        id: s.id,
+        user_id: s.user_id,
+        user_name: s.user_name,
+        user_email: s.user_email,
+        amount_owed: parseFloat(s.amount_owed),
+        amount_owed_base: parseFloat(s.amount_owed_base),
+      });
+    }
+
+    const expenses = result.rows.map((row) => {
+      const expSplits = splitsByExpense[row.id] || [];
+      let splitType = 'none';
+      if (expSplits.length > 0) {
+        const firstAmt = expSplits[0].amount_owed;
+        const allEqual = expSplits.every((s) => Math.abs(s.amount_owed - firstAmt) <= 0.02);
+        splitType = allEqual ? 'equal' : 'custom';
+      }
+
+      return {
+        id: row.id,
+        trip_id: row.trip_id,
+        paid_by: row.paid_by,
+        paid_by_name: row.paid_by_name,
+        paid_by_email: row.paid_by_email,
+        category: row.category,
+        amount: parseFloat(row.amount),
+        currency: row.currency,
+        amount_base: parseFloat(row.amount_base),
+        rate_used: parseFloat(row.rate_used),
+        date: typeof row.date === 'string' ? row.date.split('T')[0] : new Date(row.date).toISOString().split('T')[0],
+        note: row.note || '',
+        created_at: row.created_at,
+        split_type: splitType,
+        splits: expSplits,
+      };
+    });
 
     return res.json({
       success: true,
@@ -98,8 +275,9 @@ async function getTripExpenses(req, res, next) {
   }
 }
 
-// POST /api/trips/:id/expenses - Create new expense with server-side currency conversion
+// POST /api/trips/:id/expenses - Create new expense with server-side conversion & group splitting
 async function createExpense(req, res, next) {
+  const client = await db.getClient();
   try {
     const tripId = parseInt(req.params.id, 10);
     if (isNaN(tripId)) {
@@ -111,7 +289,7 @@ async function createExpense(req, res, next) {
       return res.status(404).json({ success: false, error: { message: 'Trip not found or unauthorized.' } });
     }
 
-    const { category, amount, currency, date, note, paid_by } = req.body;
+    const { category, amount, currency, date, note, paid_by, split_type = 'equal', splits, split_members } = req.body;
 
     if (!category || !VALID_CATEGORIES.includes(category)) {
       return res.status(400).json({
@@ -132,8 +310,7 @@ async function createExpense(req, res, next) {
     let payerId = req.user.id;
     if (paid_by) {
       const parsedPayer = parseInt(paid_by, 10);
-      // Verify payer is member of trip
-      const payerCheck = await db.query(
+      const payerCheck = await client.query(
         `SELECT u.id FROM users u
          JOIN trip_members tm ON u.id = tm.user_id
          WHERE tm.trip_id = $1 AND u.id = $2
@@ -158,7 +335,21 @@ async function createExpense(req, res, next) {
     const { amount: savedAmount, currency: savedCurrency, amount_base, rate_used } =
       await convertToBase(numAmount, targetCurrency);
 
-    const insertResult = await db.query(
+    await client.query('BEGIN');
+
+    // Resolve split allocations
+    const splitResult = await resolveSplits({
+      client,
+      tripId,
+      totalAmount: savedAmount,
+      amountBase: amount_base,
+      splitType: split_type,
+      splits,
+      splitMembers: split_members,
+      payerId,
+    });
+
+    const insertResult = await client.query(
       `INSERT INTO expenses (trip_id, paid_by, category, amount, currency, amount_base, rate_used, date, note)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
@@ -166,6 +357,26 @@ async function createExpense(req, res, next) {
     );
 
     const createdExpense = insertResult.rows[0];
+
+    // Insert split rows into expense_splits
+    const insertedSplits = [];
+    for (const s of splitResult.splits) {
+      const splitInsert = await client.query(
+        `INSERT INTO expense_splits (expense_id, user_id, amount_owed, amount_owed_base)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id, expense_id, user_id, amount_owed, amount_owed_base`,
+        [createdExpense.id, s.user_id, s.amount_owed, s.amount_owed_base]
+      );
+      insertedSplits.push({
+        ...splitInsert.rows[0],
+        amount_owed: parseFloat(splitInsert.rows[0].amount_owed),
+        amount_owed_base: parseFloat(splitInsert.rows[0].amount_owed_base),
+        user_name: s.user_name,
+        user_email: s.user_email,
+      });
+    }
+
+    await client.query('COMMIT');
 
     // Fetch payer info for response
     const payerInfo = await db.query(`SELECT name, email FROM users WHERE id = $1`, [payerId]);
@@ -179,15 +390,23 @@ async function createExpense(req, res, next) {
         rate_used: parseFloat(createdExpense.rate_used),
         paid_by_name: payerInfo.rows[0]?.name || req.user.name,
         paid_by_email: payerInfo.rows[0]?.email || req.user.email,
+        split_type: splitResult.split_type,
+        splits: insertedSplits,
       },
       message: 'Expense logged successfully.',
     });
   } catch (err) {
+    await client.query('ROLLBACK');
+    if (err.status) {
+      return res.status(err.status).json({ success: false, error: { message: err.message } });
+    }
     next(err);
+  } finally {
+    client.release();
   }
 }
 
-// GET /api/trips/:id/expenses/:expenseId - Get single expense
+// GET /api/trips/:id/expenses/:expenseId - Get single expense with splits
 async function getExpenseById(req, res, next) {
   try {
     const tripId = parseInt(req.params.id, 10);
@@ -211,6 +430,34 @@ async function getExpenseById(req, res, next) {
     }
 
     const exp = result.rows[0];
+
+    // Fetch splits for this single expense
+    const splitsResult = await db.query(
+      `SELECT es.id, es.expense_id, es.user_id, es.amount_owed, es.amount_owed_base,
+              u.name AS user_name, u.email AS user_email
+       FROM expense_splits es
+       JOIN users u ON es.user_id = u.id
+       WHERE es.expense_id = $1
+       ORDER BY es.id ASC`,
+      [expenseId]
+    );
+
+    const splits = splitsResult.rows.map((s) => ({
+      id: s.id,
+      user_id: s.user_id,
+      user_name: s.user_name,
+      user_email: s.user_email,
+      amount_owed: parseFloat(s.amount_owed),
+      amount_owed_base: parseFloat(s.amount_owed_base),
+    }));
+
+    let splitType = 'none';
+    if (splits.length > 0) {
+      const firstAmt = splits[0].amount_owed;
+      const allEqual = splits.every((s) => Math.abs(s.amount_owed - firstAmt) <= 0.02);
+      splitType = allEqual ? 'equal' : 'custom';
+    }
+
     return res.json({
       success: true,
       data: {
@@ -218,6 +465,8 @@ async function getExpenseById(req, res, next) {
         amount: parseFloat(exp.amount),
         amount_base: parseFloat(exp.amount_base),
         rate_used: parseFloat(exp.rate_used),
+        split_type: splitType,
+        splits,
       },
     });
   } catch (err) {
@@ -225,8 +474,9 @@ async function getExpenseById(req, res, next) {
   }
 }
 
-// PUT /api/trips/:id/expenses/:expenseId - Update expense
+// PUT /api/trips/:id/expenses/:expenseId - Update expense and splits
 async function updateExpense(req, res, next) {
+  const client = await db.getClient();
   try {
     const tripId = parseInt(req.params.id, 10);
     const expenseId = parseInt(req.params.expenseId, 10);
@@ -236,7 +486,7 @@ async function updateExpense(req, res, next) {
       return res.status(404).json({ success: false, error: { message: 'Trip not found or unauthorized.' } });
     }
 
-    const existingResult = await db.query(
+    const existingResult = await client.query(
       `SELECT * FROM expenses WHERE id = $1 AND trip_id = $2`,
       [expenseId, tripId]
     );
@@ -256,7 +506,7 @@ async function updateExpense(req, res, next) {
       });
     }
 
-    const { category, amount, currency, date, note, paid_by } = req.body;
+    const { category, amount, currency, date, note, paid_by, split_type, splits, split_members } = req.body;
 
     const updateFields = [];
     const updateValues = [];
@@ -283,9 +533,10 @@ async function updateExpense(req, res, next) {
       updateValues.push(date);
     }
 
+    let targetPayerId = existingExpense.paid_by;
     if (paid_by !== undefined) {
       const parsedPayer = parseInt(paid_by, 10);
-      const payerCheck = await db.query(
+      const payerCheck = await client.query(
         `SELECT u.id FROM users u
          JOIN trip_members tm ON u.id = tm.user_id
          WHERE tm.trip_id = $1 AND u.id = $2
@@ -296,9 +547,13 @@ async function updateExpense(req, res, next) {
       if (payerCheck.rows.length === 0) {
         return res.status(400).json({ success: false, error: { message: 'Payer must be a member of this trip.' } });
       }
+      targetPayerId = parsedPayer;
       updateFields.push(`paid_by = $${pIdx++}`);
       updateValues.push(parsedPayer);
     }
+
+    let finalAmount = parseFloat(existingExpense.amount);
+    let finalBase = parseFloat(existingExpense.amount_base);
 
     // If amount or currency changed, recompute amount_base and rate_used
     if (amount !== undefined || currency !== undefined) {
@@ -310,6 +565,9 @@ async function updateExpense(req, res, next) {
       }
 
       const conversion = await convertToBase(newAmount, newCurrency);
+      finalAmount = conversion.amount;
+      finalBase = conversion.amount_base;
+
       updateFields.push(`amount = $${pIdx++}`);
       updateValues.push(conversion.amount);
 
@@ -323,20 +581,107 @@ async function updateExpense(req, res, next) {
       updateValues.push(conversion.rate_used);
     }
 
-    if (updateFields.length === 0) {
-      return res.status(400).json({ success: false, error: { message: 'No fields provided for update.' } });
+    await client.query('BEGIN');
+
+    let updated = existingExpense;
+    if (updateFields.length > 0) {
+      updateValues.push(expenseId, tripId);
+      const updateQuery = `
+        UPDATE expenses
+        SET ${updateFields.join(', ')}
+        WHERE id = $${pIdx++} AND trip_id = $${pIdx++}
+        RETURNING *
+      `;
+      const updatedResult = await client.query(updateQuery, updateValues);
+      updated = updatedResult.rows[0];
     }
 
-    updateValues.push(expenseId, tripId);
-    const updateQuery = `
-      UPDATE expenses
-      SET ${updateFields.join(', ')}
-      WHERE id = $${pIdx++} AND trip_id = $${pIdx++}
-      RETURNING *
-    `;
+    // Check if splits need updating
+    const existingSplitsRes = await client.query(
+      `SELECT * FROM expense_splits WHERE expense_id = $1`,
+      [expenseId]
+    );
 
-    const updatedResult = await db.query(updateQuery, updateValues);
-    const updated = updatedResult.rows[0];
+    const hasNewSplitsConfig = split_type !== undefined || splits !== undefined || split_members !== undefined;
+    const amountChanged = amount !== undefined || currency !== undefined;
+
+    let finalSplits = [];
+    let finalSplitType = 'none';
+
+    if (hasNewSplitsConfig) {
+      // Re-resolve splits using new config
+      const effectiveSplitType = split_type !== undefined ? split_type : (splits ? 'custom' : 'equal');
+      const splitResult = await resolveSplits({
+        client,
+        tripId,
+        totalAmount: finalAmount,
+        amountBase: finalBase,
+        splitType: effectiveSplitType,
+        splits,
+        splitMembers: split_members,
+        payerId: targetPayerId,
+      });
+
+      await client.query(`DELETE FROM expense_splits WHERE expense_id = $1`, [expenseId]);
+
+      for (const s of splitResult.splits) {
+        const splitInsert = await client.query(
+          `INSERT INTO expense_splits (expense_id, user_id, amount_owed, amount_owed_base)
+           VALUES ($1, $2, $3, $4)
+           RETURNING id, expense_id, user_id, amount_owed, amount_owed_base`,
+          [expenseId, s.user_id, s.amount_owed, s.amount_owed_base]
+        );
+        finalSplits.push({
+          ...splitInsert.rows[0],
+          amount_owed: parseFloat(splitInsert.rows[0].amount_owed),
+          amount_owed_base: parseFloat(splitInsert.rows[0].amount_owed_base),
+          user_name: s.user_name,
+          user_email: s.user_email,
+        });
+      }
+      finalSplitType = splitResult.split_type;
+    } else if (amountChanged && existingSplitsRes.rows.length > 0) {
+      // Re-scale existing splits with new amount and base
+      const currentParticipants = existingSplitsRes.rows.map((r) => r.user_id);
+      const splitResult = await resolveSplits({
+        client,
+        tripId,
+        totalAmount: finalAmount,
+        amountBase: finalBase,
+        splitType: 'equal',
+        splitMembers: currentParticipants,
+        payerId: targetPayerId,
+      });
+
+      await client.query(`DELETE FROM expense_splits WHERE expense_id = $1`, [expenseId]);
+
+      for (const s of splitResult.splits) {
+        const splitInsert = await client.query(
+          `INSERT INTO expense_splits (expense_id, user_id, amount_owed, amount_owed_base)
+           VALUES ($1, $2, $3, $4)
+           RETURNING id, expense_id, user_id, amount_owed, amount_owed_base`,
+          [expenseId, s.user_id, s.amount_owed, s.amount_owed_base]
+        );
+        finalSplits.push({
+          ...splitInsert.rows[0],
+          amount_owed: parseFloat(splitInsert.rows[0].amount_owed),
+          amount_owed_base: parseFloat(splitInsert.rows[0].amount_owed_base),
+          user_name: s.user_name,
+          user_email: s.user_email,
+        });
+      }
+      finalSplitType = 'equal';
+    } else {
+      // Keep existing splits
+      finalSplits = existingSplitsRes.rows.map((s) => ({
+        ...s,
+        amount_owed: parseFloat(s.amount_owed),
+        amount_owed_base: parseFloat(s.amount_owed_base),
+      }));
+      finalSplitType = finalSplits.length > 0 ? 'equal' : 'none';
+    }
+
+    await client.query('COMMIT');
 
     const payerInfo = await db.query(`SELECT name, email FROM users WHERE id = $1`, [updated.paid_by]);
 
@@ -349,11 +694,19 @@ async function updateExpense(req, res, next) {
         rate_used: parseFloat(updated.rate_used),
         paid_by_name: payerInfo.rows[0]?.name || '',
         paid_by_email: payerInfo.rows[0]?.email || '',
+        split_type: finalSplitType,
+        splits: finalSplits,
       },
       message: 'Expense updated successfully.',
     });
   } catch (err) {
+    await client.query('ROLLBACK');
+    if (err.status) {
+      return res.status(err.status).json({ success: false, error: { message: err.message } });
+    }
     next(err);
+  } finally {
+    client.release();
   }
 }
 

@@ -146,7 +146,8 @@ CREATE TABLE expense_splits (
     id SERIAL PRIMARY KEY,
     expense_id INT NOT NULL REFERENCES expenses(id) ON DELETE CASCADE,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    amount_owed NUMERIC(12, 2) NOT NULL
+    amount_owed NUMERIC(12, 2) NOT NULL,
+    amount_owed_base NUMERIC(12, 2) NOT NULL DEFAULT 0.00
 );
 
 -- 11. Settlements Table (Tracking debt repayment between trip members)

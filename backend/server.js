@@ -9,6 +9,7 @@ const hotelRoutes = require('./routes/hotelRoutes');
 const tripRoutes = require('./routes/tripRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const transportRoutes = require('./routes/transportRoutes');
+const settlementRoutes = require('./routes/settlementRoutes');
 const { startRateSyncCron } = require('./services/rateSyncService');
 
 const app = express();
@@ -38,6 +39,7 @@ app.use('/api/hotels', hotelRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/transport', transportRoutes);
+app.use('/api/settlements', settlementRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

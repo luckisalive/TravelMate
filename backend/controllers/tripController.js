@@ -233,6 +233,19 @@ async function getTripById(req, res, next) {
       [tripId]
     );
 
+    // Fetch settlements for this trip
+    const settlementsResult = await db.query(
+      `SELECT s.id, s.trip_id, s.from_user, s.to_user, s.amount, s.settled_at,
+              uf.name AS from_name, uf.email AS from_email,
+              ut.name AS to_name, ut.email AS to_email
+       FROM settlements s
+       JOIN users uf ON s.from_user = uf.id
+       JOIN users ut ON s.to_user = ut.id
+       WHERE s.trip_id = $1
+       ORDER BY s.settled_at DESC`,
+      [tripId]
+    );
+
     const budget = parseFloat(trip.budget) || 0;
 
     // Financial summaries
@@ -282,6 +295,10 @@ async function getTripById(req, res, next) {
           amount: parseFloat(e.amount),
           amount_base: parseFloat(e.amount_base),
           rate_used: parseFloat(e.rate_used),
+        })),
+        settlements: settlementsResult.rows.map((s) => ({
+          ...s,
+          amount: parseFloat(s.amount),
         })),
         summary: {
           total_budget: budget,

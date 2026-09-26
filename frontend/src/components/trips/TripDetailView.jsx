@@ -26,7 +26,8 @@ import {
   Building2,
   Plane,
   X,
-  UserCheck
+  UserCheck,
+  Scale
 } from 'lucide-react';
 import { 
   PieChart, 
@@ -46,6 +47,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 import ExpenseModal from './ExpenseModal';
 import TripModal from './TripModal';
+import TripBalancesView from './TripBalancesView';
 
 const CATEGORY_COLORS = {
   Food: '#F59E0B',       // Amber
@@ -528,6 +530,24 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
           </button>
 
           <button
+            onClick={() => setActiveSubTab('balances')}
+            className={`pb-3 text-sm font-bold transition-all relative ${
+              activeSubTab === 'balances'
+                ? 'text-indigo-600 border-b-2 border-indigo-600'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span className="flex items-center gap-1.5">
+              <span>Balances & Debt</span>
+              {trip.members?.length > 1 && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                  Split
+                </span>
+              )}
+            </span>
+          </button>
+
+          <button
             onClick={() => setActiveSubTab('members')}
             className={`pb-3 text-sm font-bold transition-all relative ${
               activeSubTab === 'members'
@@ -613,11 +633,22 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
                           <h4 className="text-sm font-bold text-slate-800">
                             {exp.note || `${exp.category} expense`}
                           </h4>
-                          <p className="text-xs text-slate-500 flex items-center gap-1.5">
+                          <p className="text-xs text-slate-500 flex items-center gap-1.5 flex-wrap">
                             <span>Paid by:</span>
                             <span className="font-semibold text-slate-700">
                               {exp.paid_by === user?.id ? 'You' : exp.paid_by_name}
                             </span>
+                            {exp.splits && exp.splits.length > 0 && (
+                              <>
+                                <span>•</span>
+                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
+                                  <Users className="w-3 h-3" />
+                                  <span>
+                                    Split ({exp.split_type === 'equal' ? 'Equal' : 'Custom'} · {exp.splits.length} {exp.splits.length === 1 ? 'person' : 'people'})
+                                  </span>
+                                </span>
+                              </>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -803,6 +834,15 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
               ))}
             </div>
           </div>
+        )}
+
+        {/* SUBTAB 4: BALANCES & DEBT (Phase 7) */}
+        {activeSubTab === 'balances' && (
+          <TripBalancesView
+            tripId={tripId}
+            trip={trip}
+            onRefreshTrip={fetchTripDetails}
+          />
         )}
       </div>
 
