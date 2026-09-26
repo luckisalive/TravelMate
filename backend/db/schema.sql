@@ -218,3 +218,10 @@ CREATE INDEX idx_settlements_trip ON settlements(trip_id);
 CREATE INDEX idx_itinerary_trip ON itinerary_items(trip_id, day_number, position);
 CREATE INDEX idx_notifications_user_unread ON notifications(user_id, is_read);
 CREATE INDEX idx_exchange_rates_lookup ON exchange_rates(base, currency, rate_date DESC);
+CREATE INDEX IF NOT EXISTS idx_bookings_trip_id ON bookings(trip_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_user_created ON bookings(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_seats_booking_id ON seats(booking_id);
+CREATE INDEX IF NOT EXISTS idx_transport_dest ON transport_options(destination_code, departs_at);
+CREATE INDEX IF NOT EXISTS idx_exchange_rates_currency ON exchange_rates(currency, rate_date DESC);
+CREATE INDEX IF NOT EXISTS idx_hotels_city_price ON hotels(city, price_per_night);
+

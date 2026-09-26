@@ -15,16 +15,24 @@ import {
   X,
   Ticket,
   Armchair,
-  ArrowRight
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import BoardingPassModal from '../transport/BoardingPassModal';
 import ReviewModal from '../reviews/ReviewModal';
+import { BookingsListSkeleton } from '../common/Skeletons';
+import EmptyState from '../common/EmptyState';
 
 export default function MyBookingsView({ onExploreHotels, onExploreTransport }) {
   const { user } = useAuth();
+  const toast = useToast();
   const [bookings, setBookings] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 12, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState('all'); // all, hotel, transport
   const [statusFilter, setStatusFilter] = useState('all'); // all, confirmed, cancelled
@@ -40,7 +48,10 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
   const loadBookings = async () => {
     setLoading(true);
     try {
-      const params = {};
+      const params = {
+        page,
+        limit: 12,
+      };
       if (typeFilter !== 'all') {
         params.type = typeFilter;
       }
@@ -50,6 +61,9 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
       ]);
       if (bookRes.data?.success) {
         setBookings(bookRes.data.data);
+        if (bookRes.data.pagination) {
+          setPagination(bookRes.data.pagination);
+        }
       }
       if (revRes.data?.success && Array.isArray(revRes.data.data)) {
         setReviewedBookingIds(new Set(revRes.data.data.map((r) => r.booking_id)));
@@ -62,10 +76,14 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
   };
 
   useEffect(() => {
+    setPage(1);
+  }, [typeFilter]);
+
+  useEffect(() => {
     if (user) {
       loadBookings();
     }
-  }, [user, typeFilter]);
+  }, [user, typeFilter, page]);
 
   // Handle Cancel
   const handleCancelBooking = async () => {
@@ -74,10 +92,12 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
     try {
       const res = await api.patch(`/bookings/${cancelModalBooking.id}/cancel`);
       if (res.data?.success) {
+        const msg = `Reservation ${cancelModalBooking.reference_code} has been cancelled successfully.`;
         setActionMessage({
           type: 'success',
-          text: `Reservation ${cancelModalBooking.reference_code} has been cancelled successfully.`,
+          text: msg,
         });
+        toast.success(msg);
         // Update local state
         setBookings((prev) =>
           prev.map((b) =>
@@ -86,10 +106,12 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
         );
       }
     } catch (err) {
+      const msg = err.response?.data?.error?.message || 'Failed to cancel reservation.';
       setActionMessage({
         type: 'error',
-        text: err.response?.data?.error?.message || 'Failed to cancel reservation.',
+        text: msg,
       });
+      toast.error(msg);
     } finally {
       setCancellingId(null);
       setCancelModalBooking(null);
@@ -100,17 +122,21 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
     try {
       const res = await api.patch(`/bookings/${bookingId}/complete`);
       if (res.data?.success) {
+        const msg = 'Reservation marked as completed! You can now rate and review your experience.';
         setActionMessage({
           type: 'success',
-          text: 'Reservation marked as completed! You can now rate and review your experience.',
+          text: msg,
         });
+        toast.success(msg);
         loadBookings();
       }
     } catch (err) {
+      const msg = err.response?.data?.error?.message || 'Failed to complete reservation.';
       setActionMessage({
         type: 'error',
-        text: err.response?.data?.error?.message || 'Failed to complete reservation.',
+        text: msg,
       });
+      toast.error(msg);
     }
   };
 
@@ -206,48 +232,36 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
 
       {/* Bookings List Content */}
       {loading ? (
-        <div className="py-20 text-center space-y-3">
-          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mx-auto" />
-          <p className="text-xs text-slate-500">Loading your reservations...</p>
-        </div>
+        <BookingsListSkeleton count={4} />
       ) : filteredBookings.length === 0 ? (
-        /* Empty State */
-        <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm space-y-4 max-w-lg mx-auto">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
-            <Ticket className="w-8 h-8" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-800">
-              {statusFilter === 'all'
-                ? 'No Bookings Found'
-                : `No ${statusFilter} Reservations`}
-            </h3>
-            <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
-              You haven't booked any stays or transport yet. Explore our verified hotels or scheduled flights and trains.
-            </p>
-          </div>
-          <div className="flex items-center justify-center gap-3 pt-2">
-            {onExploreHotels && (
-              <button
-                onClick={onExploreHotels}
-                className="px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-xl shadow-xs transition-colors"
-              >
-                Browse Hotels
-              </button>
-            )}
-            {onExploreTransport && (
-              <button
-                onClick={onExploreTransport}
-                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow-md transition-colors"
-              >
-                Search Transport
-              </button>
-            )}
-          </div>
-        </div>
+        <EmptyState
+          icon={Ticket}
+          badge={statusFilter === 'all' ? 'No Reservations' : `${statusFilter.toUpperCase()} Reservations`}
+          title={statusFilter === 'all' ? 'No Bookings Found' : `No ${statusFilter} Reservations`}
+          description="You haven't booked any stays or transport yet. Explore our verified hotels or scheduled flights and trains to reserve seats and rooms."
+          action={
+            onExploreHotels
+              ? {
+                  label: 'Browse Hotels',
+                  icon: Building2,
+                  onClick: onExploreHotels,
+                }
+              : null
+          }
+          secondaryAction={
+            onExploreTransport
+              ? {
+                  label: 'Search Transport',
+                  icon: Plane,
+                  onClick: onExploreTransport,
+                }
+              : null
+          }
+        />
       ) : (
-        /* Reservation Cards Grid */
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="space-y-6">
+          {/* Reservation Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filteredBookings.map((booking) => {
             const isConfirmed = booking.status === 'confirmed';
             const isHotel = booking.type === 'hotel';
@@ -438,6 +452,51 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
               </div>
             );
           })}
+        </div>
+
+        {/* Pagination Controls */}
+        {pagination.totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-slate-200/80 pt-6 px-2">
+            <span className="text-xs text-slate-500 font-medium">
+              Showing {bookings.length} of {pagination.total} reservations
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700 cursor-pointer"
+                title="Previous Page"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(pagination.totalPages, 7) }).map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setPage(i + 1)}
+                    className={`w-8 h-8 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                      page === i + 1
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                disabled={page >= pagination.totalPages}
+                className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700 cursor-pointer"
+                title="Next Page"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
         </div>
       )}
 

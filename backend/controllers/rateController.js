@@ -35,9 +35,14 @@ async function getLatestRates(req, res, next) {
     }
 
     // Fallback to static fixture if no rows in DB
-    const fallbackPath = path.join(__dirname, '../db/fixtures/fallbackRates.json');
-    if (fs.existsSync(fallbackPath)) {
-      const fallback = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
+    let fallback = null;
+    try {
+      fallback = require('../db/fixtures/fallbackRates.json');
+    } catch (e) {
+      // Ignore
+    }
+
+    if (fallback && fallback.rates) {
       return res.json({
         success: true,
         base: 'INR',

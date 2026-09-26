@@ -1,6 +1,12 @@
-const path = require('path');
-const fs = require('fs');
 const db = require('../config/db');
+const { invalidateCurrencyCache } = require('../utils/currency');
+
+let fallbackData = null;
+try {
+  fallbackData = require('../db/fixtures/fallbackRates.json');
+} catch (e) {
+  // Ignore
+}
 
 /**
  * Fetch latest rates from Frankfurter Live API with fallback to static fixture.
@@ -26,9 +32,7 @@ async function fetchFrankfurterRates() {
   } catch (err) {
     clearTimeout(timeoutId);
     console.warn(`[rateSyncService] Live Frankfurter fetch failed (${err.message}). Using offline fallback fixture.`);
-    const fallbackPath = path.join(__dirname, '../db/fixtures/fallbackRates.json');
-    if (fs.existsSync(fallbackPath)) {
-      const fallbackData = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
+    if (fallbackData && fallbackData.rates) {
       return {
         base: fallbackData.base || 'INR',
         date: fallbackData.date || new Date().toISOString().split('T')[0],
@@ -73,6 +77,7 @@ async function syncExchangeRates() {
       insertedCount++;
     }
 
+    invalidateCurrencyCache();
     console.log(`[rateSyncService] Synced ${insertedCount} exchange rates for ${base} on ${date} (Source: ${source}).`);
     return {
       success: true,

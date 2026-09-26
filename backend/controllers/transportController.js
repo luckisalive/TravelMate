@@ -132,75 +132,97 @@ async function getTransports(req, res, next) {
     const countResult = await db.query(countSql, values);
     const totalCount = parseInt(countResult.rows[0].total, 10);
 
-    // Common SELECT query with seat counts
-    const baseQuery = `
-      SELECT t.*,
-             ROUND(EXTRACT(EPOCH FROM (t.arrives_at - t.departs_at)) / 60) AS duration_minutes,
-             s_orig.name AS origin_name, s_orig.city AS origin_city, s_orig.type AS origin_type,
-             s_dest.name AS dest_name, s_dest.city AS dest_city, s_dest.type AS dest_type,
-             COALESCE(seat_counts.total_seats, 0) AS total_seats,
-             COALESCE(seat_counts.available_seats, 0) AS available_seats
-      FROM transport_options t
-      LEFT JOIN stations s_orig ON t.origin_code = s_orig.code
-      LEFT JOIN stations s_dest ON t.destination_code = s_dest.code
-      LEFT JOIN (
-        SELECT transport_id, 
-               COUNT(*) AS total_seats,
-               COUNT(*) FILTER (WHERE booking_id IS NULL) AS available_seats
-        FROM seats
-        GROUP BY transport_id
-      ) seat_counts ON t.id = seat_counts.transport_id
-      ${whereClause}
-    `;
-
     let transports = [];
 
-    if (sortBy === 'recommended') {
-      // For recommendation scoring, evaluate all filtered candidates, compute heuristic, sort, and slice
-      const allRes = await db.query(baseQuery, values);
-      const rows = allRes.rows;
-
-      if (rows.length > 0) {
-        const prices = rows.map((r) => parseFloat(r.price));
-        const minP = Math.min(...prices);
-        const maxP = Math.max(...prices);
-        const priceDiff = maxP - minP || 1;
-
-        const durations = rows.map((r) => parseInt(r.duration_minutes, 10) || 60);
-        const minDur = Math.min(...durations);
-        const maxDur = Math.max(...durations);
-        const durDiff = maxDur - minDur || 1;
-
+    if (totalCount > 0) {
+      if (sortBy === 'recommended') {
         const travelStyleKey = style || (req.user && req.user.travel_style) || 'balanced';
         const weights = TRAVEL_STYLES[travelStyleKey] || TRAVEL_STYLES.balanced;
         const wPrice = weights.w_price;
         const wComfort = weights.w_comfort;
 
-        const scored = rows.map((r) => {
+        const recSql = `
+          WITH filtered_transports AS (
+            SELECT t.*,
+                   ROUND(EXTRACT(EPOCH FROM (t.arrives_at - t.departs_at)) / 60)::int AS duration_minutes,
+                   s_orig.name AS origin_name, s_orig.city AS origin_city, s_orig.type AS origin_type,
+                   s_dest.name AS dest_name, s_dest.city AS dest_city, s_dest.type AS dest_type
+            FROM transport_options t
+            LEFT JOIN stations s_orig ON t.origin_code = s_orig.code
+            LEFT JOIN stations s_dest ON t.destination_code = s_dest.code
+            ${whereClause}
+          ),
+          min_max AS (
+            SELECT *,
+                   MIN(price) OVER () AS min_price,
+                   MAX(price) OVER () AS max_price,
+                   MIN(duration_minutes) OVER () AS min_duration,
+                   MAX(duration_minutes) OVER () AS max_duration
+            FROM filtered_transports
+          ),
+          scored AS (
+            SELECT *,
+              CASE 
+                WHEN max_price = min_price THEN 1.0
+                ELSE (max_price - price)::numeric / NULLIF(max_price - min_price, 0)
+              END AS price_score,
+              CASE 
+                WHEN max_duration = min_duration THEN 1.0
+                ELSE (max_duration - duration_minutes)::numeric / NULLIF(max_duration - min_duration, 0)
+              END AS duration_score,
+              CASE 
+                WHEN mode = 'flight' AND class = 'Economy' THEN 0.7
+                WHEN mode = 'flight' AND class = 'Business' THEN 1.0
+                WHEN mode = 'train' AND class = 'SL' THEN 0.3
+                WHEN mode = 'train' AND class = '3AC' THEN 0.6
+                WHEN mode = 'train' AND class = '2AC' THEN 0.85
+                WHEN mode = 'train' AND class = '1AC' THEN 1.0
+                WHEN mode = 'bus' AND class = 'Standard' THEN 0.4
+                WHEN mode = 'bus' AND class = 'AC Sleeper' THEN 0.75
+                WHEN mode = 'flight' THEN 0.7
+                WHEN mode = 'train' THEN 0.6
+                WHEN mode = 'bus' THEN 0.5
+                ELSE 0.5
+              END AS class_score
+            FROM min_max
+          ),
+          final_scored AS (
+            SELECT *,
+              ROUND((
+                ${wPrice} * price_score + 
+                ${wComfort} * (0.5 * duration_score + 0.5 * class_score)
+              )::numeric, 4) AS recommendation_score
+            FROM scored
+          ),
+          paged AS (
+            SELECT * FROM final_scored
+            ORDER BY recommendation_score DESC, departs_at ASC
+            LIMIT $${values.length + 1} OFFSET $${values.length + 2}
+          )
+          SELECT p.*,
+                 COALESCE(sc.total_seats, 0) AS total_seats,
+                 COALESCE(sc.available_seats, 0) AS available_seats
+          FROM paged p
+          LEFT JOIN LATERAL (
+            SELECT COUNT(*)::int AS total_seats,
+                   COUNT(*) FILTER (WHERE booking_id IS NULL)::int AS available_seats
+            FROM seats s
+            WHERE s.transport_id = p.id
+          ) sc ON true
+          ORDER BY p.recommendation_score DESC, p.departs_at ASC
+        `;
+
+        const pagedRes = await db.query(recSql, [...values, limitNum, offset]);
+        transports = pagedRes.rows.map((r) => {
           const price = parseFloat(r.price);
           const duration = parseInt(r.duration_minutes, 10) || 60;
-
-          // Price score: 1.0 is cheapest, 0.0 is most expensive
-          const priceScore = (maxP - price) / priceDiff;
-
-          // Duration score: 1.0 is shortest, 0.0 is longest
-          const durationScore = (maxDur - duration) / durDiff;
-
-          // Class score: mapped from constants
-          let classScore = 0.5;
-          if (r.mode === 'flight') {
-            classScore = FLIGHT_CLASSES[r.class]?.comfortScore ?? 0.7;
-          } else if (r.mode === 'train') {
-            classScore = TRAIN_CLASSES[r.class]?.comfortScore ?? 0.6;
-          } else if (r.mode === 'bus') {
-            classScore = BUS_CLASSES[r.class]?.comfortScore ?? 0.5;
-          }
-
-          // Transport comfort = 0.5 x duration score + 0.5 x class score (PRD Section 10)
+          const minP = parseFloat(r.min_price);
+          const minDur = parseInt(r.min_duration, 10);
+          const classScore = parseFloat(r.class_score);
+          const durationScore = parseFloat(r.duration_score);
+          const priceScore = parseFloat(r.price_score);
           const comfortScore = 0.5 * durationScore + 0.5 * classScore;
-
-          // Total score
-          const score = parseFloat((wPrice * priceScore + wComfort * comfortScore).toFixed(4));
+          const score = parseFloat(r.recommendation_score);
 
           // Human-readable explainable reason
           let reason = 'Balanced transit option';
@@ -247,64 +269,83 @@ async function getTransports(req, res, next) {
             outboundSearchUrls: getOutboundUrls(r, { city: r.origin_city, code: r.origin_code }, { city: r.dest_city, code: r.destination_code }),
           };
         });
+      } else {
+        // Standard SQL ordering with deferred seat counts via LATERAL
+        let orderBySql = 'ORDER BY departs_at ASC';
+        if (sortBy === 'price_asc') {
+          orderBySql = 'ORDER BY price ASC, departs_at ASC';
+        } else if (sortBy === 'price_desc') {
+          orderBySql = 'ORDER BY price DESC, departs_at ASC';
+        } else if (sortBy === 'duration_asc') {
+          orderBySql = 'ORDER BY duration_minutes ASC, price ASC';
+        } else if (sortBy === 'departs_asc') {
+          orderBySql = 'ORDER BY departs_at ASC';
+        }
 
-        // Sort descending by recommendation score
-        scored.sort((a, b) => b.recommendation_score - a.recommendation_score);
-        transports = scored.slice(offset, offset + limitNum);
+        const standardSql = `
+          WITH filtered_transports AS (
+            SELECT t.*,
+                   ROUND(EXTRACT(EPOCH FROM (t.arrives_at - t.departs_at)) / 60)::int AS duration_minutes,
+                   s_orig.name AS origin_name, s_orig.city AS origin_city, s_orig.type AS origin_type,
+                   s_dest.name AS dest_name, s_dest.city AS dest_city, s_dest.type AS dest_type
+            FROM transport_options t
+            LEFT JOIN stations s_orig ON t.origin_code = s_orig.code
+            LEFT JOIN stations s_dest ON t.destination_code = s_dest.code
+            ${whereClause}
+          ),
+          paged AS (
+            SELECT * FROM filtered_transports
+            ${orderBySql}
+            LIMIT $${values.length + 1} OFFSET $${values.length + 2}
+          )
+          SELECT p.*,
+                 COALESCE(sc.total_seats, 0) AS total_seats,
+                 COALESCE(sc.available_seats, 0) AS available_seats
+          FROM paged p
+          LEFT JOIN LATERAL (
+            SELECT COUNT(*)::int AS total_seats,
+                   COUNT(*) FILTER (WHERE booking_id IS NULL)::int AS available_seats
+            FROM seats s
+            WHERE s.transport_id = p.id
+          ) sc ON true
+          ${orderBySql}
+        `;
+
+        const pagedRes = await db.query(standardSql, [...values, limitNum, offset]);
+        transports = pagedRes.rows.map((r) => {
+          const duration = parseInt(r.duration_minutes, 10) || 60;
+          return {
+            id: r.id,
+            mode: r.mode,
+            operator: r.operator,
+            number: r.number,
+            class: r.class,
+            price: parseFloat(r.price),
+            departs_at: r.departs_at,
+            arrives_at: r.arrives_at,
+            duration_minutes: duration,
+            duration_formatted: formatDuration(duration),
+            origin: {
+              code: r.origin_code,
+              name: r.origin_name,
+              city: r.origin_city,
+              type: r.origin_type,
+            },
+            destination: {
+              code: r.destination_code,
+              name: r.dest_name,
+              city: r.dest_city,
+              type: r.dest_type,
+            },
+            seats: {
+              total: parseInt(r.total_seats, 10),
+              available: parseInt(r.available_seats, 10),
+              has_seat_selection: r.mode === 'flight',
+            },
+            outboundSearchUrls: getOutboundUrls(r, { city: r.origin_city, code: r.origin_code }, { city: r.dest_city, code: r.destination_code }),
+          };
+        });
       }
-    } else {
-      // Standard SQL ordering
-      let orderBySql = 'ORDER BY t.departs_at ASC';
-      if (sortBy === 'price_asc') {
-        orderBySql = 'ORDER BY t.price ASC, t.departs_at ASC';
-      } else if (sortBy === 'price_desc') {
-        orderBySql = 'ORDER BY t.price DESC, t.departs_at ASC';
-      } else if (sortBy === 'duration_asc') {
-        orderBySql = 'ORDER BY duration_minutes ASC, t.price ASC';
-      } else if (sortBy === 'departs_asc') {
-        orderBySql = 'ORDER BY t.departs_at ASC';
-      }
-
-      const pagedSql = `
-        ${baseQuery}
-        ${orderBySql}
-        LIMIT $${values.length + 1} OFFSET $${values.length + 2}
-      `;
-
-      const pagedRes = await db.query(pagedSql, [...values, limitNum, offset]);
-      transports = pagedRes.rows.map((r) => {
-        const duration = parseInt(r.duration_minutes, 10) || 60;
-        return {
-          id: r.id,
-          mode: r.mode,
-          operator: r.operator,
-          number: r.number,
-          class: r.class,
-          price: parseFloat(r.price),
-          departs_at: r.departs_at,
-          arrives_at: r.arrives_at,
-          duration_minutes: duration,
-          duration_formatted: formatDuration(duration),
-          origin: {
-            code: r.origin_code,
-            name: r.origin_name,
-            city: r.origin_city,
-            type: r.origin_type,
-          },
-          destination: {
-            code: r.destination_code,
-            name: r.dest_name,
-            city: r.dest_city,
-            type: r.dest_type,
-          },
-          seats: {
-            total: parseInt(r.total_seats, 10),
-            available: parseInt(r.available_seats, 10),
-            has_seat_selection: r.mode === 'flight',
-          },
-          outboundSearchUrls: getOutboundUrls(r, { city: r.origin_city, code: r.origin_code }, { city: r.dest_city, code: r.destination_code }),
-        };
-      });
     }
 
     return res.json({

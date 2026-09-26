@@ -19,11 +19,24 @@ const { startRateSyncCron } = require('./services/rateSyncService');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const defaultOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000', 'http://localhost:5000'];
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+  : defaultOrigins;
+
 // Security & Parsing Middleware
 app.use(cors({
-  origin: '*', // Allows requests from frontend in dev & prod
+  origin: (origin, callback) => {
+    // Allow non-browser requests (Postman, curl, internal tests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Origin ${origin} not allowed by CORS policy`));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 }));
 app.use(express.json());
 

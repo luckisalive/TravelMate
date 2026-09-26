@@ -1,43 +1,9 @@
-const path = require('path');
-const fs = require('fs');
 const db = require('../config/db');
+const { getExchangeRate } = require('../utils/currency');
 
-// Helper to resolve exchange rate from DB or fallback
+// Helper to resolve exchange rate from cached currency utility
 async function getExchangeRateForCurrency(currency) {
-  const currUpper = (currency || 'INR').toUpperCase();
-  if (currUpper === 'INR') {
-    return 1.0;
-  }
-
-  try {
-    const rateResult = await db.query(
-      `SELECT rate FROM exchange_rates 
-       WHERE base = 'INR' AND currency = $1 
-       ORDER BY rate_date DESC LIMIT 1`,
-      [currUpper]
-    );
-
-    if (rateResult.rows.length > 0) {
-      return parseFloat(rateResult.rows[0].rate);
-    }
-  } catch (err) {
-    console.warn(`[getExchangeRateForCurrency] DB query error (${err.message}). Trying fallback.`);
-  }
-
-  // Fallback to static JSON
-  try {
-    const fallbackPath = path.join(__dirname, '../db/fixtures/fallbackRates.json');
-    if (fs.existsSync(fallbackPath)) {
-      const fallback = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
-      if (fallback.rates && fallback.rates[currUpper]) {
-        return parseFloat(fallback.rates[currUpper]);
-      }
-    }
-  } catch (err) {
-    // Ignore fallback reading error
-  }
-
-  return 1.0;
+  return getExchangeRate(currency);
 }
 
 // POST /api/bookings/hotel - Book a hotel room
@@ -489,7 +455,11 @@ async function createTransportBooking(req, res, next) {
 // GET /api/bookings - List all bookings for current user
 async function getMyBookings(req, res, next) {
   try {
-    const { type, status, trip_id } = req.query;
+    const { type, status, trip_id, page = 1, limit = 50 } = req.query;
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
+    const offset = (pageNum - 1) * limitNum;
 
     const conditions = ['b.user_id = $1'];
     const values = [req.user.id];
@@ -512,6 +482,15 @@ async function getMyBookings(req, res, next) {
 
     const whereClause = conditions.join(' AND ');
 
+    // Total Count
+    const countRes = await db.query(
+      `SELECT COUNT(*) AS total FROM bookings b WHERE ${whereClause}`,
+      values
+    );
+    const totalCount = parseInt(countRes.rows[0]?.total || 0, 10);
+
+    const pagedValues = [...values, limitNum, offset];
+
     const result = await db.query(
       `SELECT b.*,
               h.name AS hotel_name, h.city AS hotel_city, h.stars AS hotel_stars,
@@ -533,8 +512,9 @@ async function getMyBookings(req, res, next) {
        LEFT JOIN seats s ON s.booking_id = b.id
        LEFT JOIN trips t ON b.trip_id = t.id
        WHERE ${whereClause}
-       ORDER BY b.created_at DESC`,
-      values
+       ORDER BY b.created_at DESC
+       LIMIT $${pagedValues.length - 1} OFFSET $${pagedValues.length}`,
+      pagedValues
     );
 
     return res.json({
@@ -589,6 +569,12 @@ async function getMyBookings(req, res, next) {
             }
           : null,
       })),
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limitNum),
+      },
     });
   } catch (err) {
     next(err);

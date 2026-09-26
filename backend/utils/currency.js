@@ -1,6 +1,20 @@
-const path = require('path');
-const fs = require('fs');
 const db = require('../config/db');
+
+// In-memory preloaded static fixture (zero disk I/O at runtime)
+let fallbackRates = null;
+try {
+  fallbackRates = require('../db/fixtures/fallbackRates.json');
+} catch (e) {
+  // If file cannot be found or read, will use static fallbacks
+}
+
+// In-memory rate cache with TTL
+const rateCache = new Map();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+function invalidateCurrencyCache() {
+  rateCache.clear();
+}
 
 /**
  * Fetch the latest exchange rate for a given currency against base INR.
@@ -14,6 +28,12 @@ async function getExchangeRate(currency) {
     return 1.0;
   }
 
+  const now = Date.now();
+  const cached = rateCache.get(currUpper);
+  if (cached && cached.expiresAt > now) {
+    return cached.rate;
+  }
+
   // 1. Query latest rate from exchange_rates table in PostgreSQL
   try {
     const rateResult = await db.query(
@@ -24,29 +44,27 @@ async function getExchangeRate(currency) {
     );
 
     if (rateResult.rows.length > 0) {
-      return parseFloat(rateResult.rows[0].rate);
+      const rateVal = parseFloat(rateResult.rows[0].rate);
+      rateCache.set(currUpper, { rate: rateVal, expiresAt: now + CACHE_TTL_MS });
+      return rateVal;
     }
   } catch (err) {
     console.warn(`[currency:getExchangeRate] DB lookup warning (${err.message}). Trying fallback.`);
   }
 
-  // 2. Query fallback static JSON fixture
-  try {
-    const fallbackPath = path.join(__dirname, '../db/fixtures/fallbackRates.json');
-    if (fs.existsSync(fallbackPath)) {
-      const fallback = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
-      if (fallback.rates && fallback.rates[currUpper]) {
-        return parseFloat(fallback.rates[currUpper]);
-      }
-    }
-  } catch (err) {
-    // Ignore error
+  // 2. Query fallback static JSON fixture (preloaded in memory)
+  if (fallbackRates && fallbackRates.rates && fallbackRates.rates[currUpper]) {
+    const rateVal = parseFloat(fallbackRates.rates[currUpper]);
+    rateCache.set(currUpper, { rate: rateVal, expiresAt: now + CACHE_TTL_MS });
+    return rateVal;
   }
 
   // 3. Pegged AED to USD fallback if AED requested
   if (currUpper === 'AED') {
     const usdRate = await getExchangeRate('USD');
-    return parseFloat((usdRate * 3.6725).toFixed(6));
+    const aedRate = parseFloat((usdRate * 3.6725).toFixed(6));
+    rateCache.set('AED', { rate: aedRate, expiresAt: now + CACHE_TTL_MS });
+    return aedRate;
   }
 
   // 4. Default static rate matrix if offline / unseeded
@@ -61,7 +79,9 @@ async function getExchangeRate(currency) {
     JPY: 1.8350,
   };
 
-  return staticFallbacks[currUpper] || 1.0;
+  const finalRate = staticFallbacks[currUpper] || 1.0;
+  rateCache.set(currUpper, { rate: finalRate, expiresAt: now + CACHE_TTL_MS });
+  return finalRate;
 }
 
 /**
@@ -136,4 +156,5 @@ module.exports = {
   getExchangeRate,
   convertToBase,
   convertFromBase,
+  invalidateCurrencyCache,
 };

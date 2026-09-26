@@ -82,11 +82,14 @@ async function runTests() {
 
     // Test 3: GET /api/transport (all options)
     console.log('\nTesting GET /api/transport listing & pagination...');
-    const transportsRes = await makeRequest('/api/transport?limit=10');
+    const transportsRes = await makeRequest('/api/transport?limit=10&page=1');
     assert(transportsRes.status === 200, 'Transport list returns 200 OK');
     assert(transportsRes.body.data.transports.length > 0, 'Returns transports array');
     assert(transportsRes.body.data.pagination.total > 50, 'Total transport options > 50 in database');
-    passed += 3;
+    assert(transportsRes.body.data.pagination.page === 1, 'Pagination page matches 1');
+    assert(transportsRes.body.data.pagination.limit === 10, 'Pagination limit matches 10');
+    assert(transportsRes.body.data.pagination.totalPages >= 1, 'Pagination totalPages >= 1');
+    passed += 6;
 
     // Test 4: Mode filters (flight, train, bus)
     console.log('\nTesting GET /api/transport?mode=flight...');
@@ -346,6 +349,20 @@ async function runTests() {
     const myTransBooking = myBookingsRes.body.data.find((b) => b.type === 'transport');
     assert(myTransBooking !== undefined, 'User bookings list contains transport booking');
     assert(myTransBooking.transport && myTransBooking.transport.origin.city, 'Joined transport has origin city');
+    passed += 3;
+
+    // Test 18: Concurrency load test (50 simultaneous "recommended" requests)
+    console.log('\nTesting Concurrency Load: 50 simultaneous "recommended" requests...');
+    const startTime = Date.now();
+    const loadPromises = Array.from({ length: 50 }).map(() =>
+      makeRequest('/api/transport?sortBy=recommended&limit=15')
+    );
+    const loadResponses = await Promise.all(loadPromises);
+    const durationMs = Date.now() - startTime;
+    console.log(`  ⚡ 50 concurrent recommended queries resolved in ${durationMs}ms (avg ${(durationMs / 50).toFixed(1)}ms/req)`);
+    assert(loadResponses.every((r) => r.status === 200), 'All 50 concurrent requests returned 200 OK');
+    assert(loadResponses.every((r) => r.body.data.transports.length > 0), 'All 50 responses returned valid transports');
+    assert(loadResponses.every((r) => r.body.data.pagination.total > 0), 'All 50 responses returned valid pagination total');
     passed += 3;
 
     console.log('\n============================================================');

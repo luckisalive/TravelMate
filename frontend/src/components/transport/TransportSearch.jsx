@@ -13,6 +13,8 @@ import {
   AlertCircle,
   Ticket,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Compass
 } from 'lucide-react';
 import api from '../../services/api';
@@ -22,6 +24,7 @@ import TransportCard from './TransportCard';
 import FlightSeatMapModal from './FlightSeatMapModal';
 import TrainBusBookingModal from './TrainBusBookingModal';
 import BoardingPassModal from './BoardingPassModal';
+import EmptyState from '../common/EmptyState';
 
 export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
   const { user } = useAuth();
@@ -40,6 +43,7 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
 
   // Results & UI State
   const [transports, setTransports] = useState([]);
+  const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 15, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -79,7 +83,8 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
       const params = {
         sortBy,
         style: travelStyle,
-        limit: 20,
+        page,
+        limit: 15,
       };
 
       if (mode !== 'all') params.mode = mode;
@@ -100,9 +105,15 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
     }
   };
 
+  // Reset to page 1 on filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [mode, origin, destination, travelDate, sortBy, travelStyle]);
+
+  // Fetch when filters or page change
   useEffect(() => {
     fetchTransports();
-  }, [mode, origin, destination, travelDate, sortBy, travelStyle]);
+  }, [mode, origin, destination, travelDate, sortBy, travelStyle, page]);
 
   // Swap Origin and Destination
   const handleSwapStations = () => {
@@ -325,40 +336,78 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
           ))}
         </div>
       ) : transports.length === 0 ? (
-        /* Empty State */
-        <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
-            <Compass className="w-8 h-8 text-indigo-500" />
-          </div>
-          <h3 className="text-base font-bold text-slate-800">
-            No transport options found for this route or filter
-          </h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Try adjusting your departure date, selecting "All Modes", or picking primary transit hubs like Mumbai (BOM), Delhi (DEL), Bengaluru (BLR), or Goa (GOI).
-          </p>
-          <button
-            onClick={() => {
+        <EmptyState
+          icon={Compass}
+          badge="No Transit Options"
+          title="No transport options found for this route"
+          description="Try adjusting your departure date, selecting 'All Modes', or picking primary transit hubs like Mumbai (BOM), Delhi (DEL), Bengaluru (BLR), or Goa (GOI)."
+          action={{
+            label: 'Reset to Mumbai → Delhi',
+            onClick: () => {
               setOrigin('BOM');
               setDestination('DEL');
               setMode('all');
               setTravelDate('');
-            }}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-colors"
-          >
-            Reset to Mumbai → Delhi
-          </button>
-        </div>
+            },
+          }}
+        />
       ) : (
         /* Results Cards Grid */
         <div className="space-y-4">
-          {transports.map((item) => (
-            <TransportCard
-              key={item.id}
-              transport={item}
-              onSelectSeat={(t) => setSeatMapFlight(t)}
-              onBook={(t) => setTrainBusTransport(t)}
-            />
-          ))}
+          <div className="space-y-4">
+            {transports.map((item) => (
+              <TransportCard
+                key={item.id}
+                transport={item}
+                onSelectSeat={(t) => setSeatMapFlight(t)}
+                onBook={(t) => setTrainBusTransport(t)}
+              />
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-slate-200/80 pt-4 px-2">
+              <span className="text-xs text-slate-500 font-medium">
+                Showing {transports.length} of {pagination.total} options
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700 cursor-pointer"
+                  title="Previous Page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(pagination.totalPages, 7) }).map((_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setPage(i + 1)}
+                      className={`w-8 h-8 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                        page === i + 1
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                  disabled={page >= pagination.totalPages}
+                  className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700 cursor-pointer"
+                  title="Next Page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

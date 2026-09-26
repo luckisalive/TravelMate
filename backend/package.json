@@ -7,6 +7,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "db:migrate": "node db/migrate.js",
+    "db:indexes": "node db/applyIndexes.js",
     "db:seed": "node db/seeds/seed.js",
     "test": "node tests/test_auth.js && node tests/test_seed.js && node tests/test_hotel.js && node tests/test_transport.js && node tests/test_expense.js && node tests/test_settlement.js && node tests/test_phase8.js && node tests/test_phase10.js",
     "test:auth": "node tests/test_auth.js",
