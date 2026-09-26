@@ -4,6 +4,10 @@ require('dotenv').config();
 
 const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/authRoutes');
+const rateRoutes = require('./routes/rateRoutes');
+const hotelRoutes = require('./routes/hotelRoutes');
+const tripRoutes = require('./routes/tripRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,6 +31,10 @@ app.get('/api/health', (req, res) => {
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/rates', rateRoutes);
+app.use('/api/hotels', hotelRoutes);
+app.use('/api/trips', tripRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 // Global Error Handler
 app.use(errorHandler);
