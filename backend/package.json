@@ -18,7 +18,8 @@
     "test:settlement": "node tests/test_settlement.js",
     "test:phase8": "node tests/test_phase8.js",
     "test:phase10": "node tests/test_phase10.js",
-    "test:jest": "jest --runInBand --detectOpenHandles --forceExit"
+    "test:jest": "jest --runInBand --detectOpenHandles --forceExit",
+    "keepalive": "node scripts/keepalive-ping.js"
   },
   "keywords": [],
   "author": "",
