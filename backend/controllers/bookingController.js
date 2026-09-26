@@ -236,6 +236,256 @@ async function createHotelBooking(req, res, next) {
   }
 }
 
+// POST /api/bookings/transport - Concurrency-safe Transport Booking (Flight, Train, Bus)
+async function createTransportBooking(req, res, next) {
+  const client = await db.getClient();
+  try {
+    const {
+      transport_id,
+      seat_no,
+      trip_id,
+      new_trip_name,
+      passenger_name,
+      currency,
+    } = req.body;
+
+    if (!transport_id) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Transport ID is required.' },
+      });
+    }
+
+    await client.query('BEGIN');
+
+    // 1. Fetch transport option with row-level lock
+    const transportResult = await client.query(
+      `SELECT t.*,
+              s_orig.name AS origin_name, s_orig.city AS origin_city,
+              s_dest.name AS dest_name, s_dest.city AS dest_city
+       FROM transport_options t
+       JOIN stations s_orig ON t.origin_code = s_orig.code
+       JOIN stations s_dest ON t.destination_code = s_dest.code
+       WHERE t.id = $1
+       FOR UPDATE OF t`,
+      [transport_id]
+    );
+
+    if (transportResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Transport option not found.' },
+      });
+    }
+
+    const transport = transportResult.rows[0];
+
+    // 2. Validate seat selection for flights (PRD Section 11 & ADR-005)
+    let selectedSeatNo = seat_no ? seat_no.trim().toUpperCase() : null;
+
+    if (transport.mode === 'flight') {
+      if (!selectedSeatNo) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Flight booking requires a selected seat number (e.g. 14B).' },
+        });
+      }
+
+      // Check if seat exists and is currently available with lock
+      const seatCheck = await client.query(
+        `SELECT id, booking_id FROM seats 
+         WHERE transport_id = $1 AND seat_no = $2 
+         FOR UPDATE`,
+        [transport.id, selectedSeatNo]
+      );
+
+      if (seatCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({
+          success: false,
+          error: { message: `Seat ${selectedSeatNo} does not exist on this flight.` },
+        });
+      }
+
+      if (seatCheck.rows[0].booking_id !== null) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({
+          success: false,
+          error: { message: `Seat ${selectedSeatNo} is already booked. Please choose another seat.` },
+        });
+      }
+    }
+
+    // 3. Resolve or create trip
+    let resolvedTripId = trip_id ? parseInt(trip_id, 10) : null;
+    const departsDate = new Date(transport.departs_at).toISOString().split('T')[0];
+    const arrivesDate = new Date(transport.arrives_at).toISOString().split('T')[0];
+
+    if (resolvedTripId) {
+      const tripCheck = await client.query(
+        `SELECT id FROM trips t
+         LEFT JOIN trip_members tm ON t.id = tm.trip_id AND tm.user_id = $1
+         WHERE t.id = $2 AND (t.created_by = $1 OR tm.user_id = $1)`,
+        [req.user.id, resolvedTripId]
+      );
+
+      if (tripCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Trip not found or unauthorized.' },
+        });
+      }
+    } else {
+      const tripName = (new_trip_name && new_trip_name.trim())
+        ? new_trip_name.trim()
+        : `Trip to ${transport.dest_city || transport.destination_code} (${departsDate})`;
+
+      const newTripRes = await client.query(
+        `INSERT INTO trips (name, created_by, start_date, end_date, budget, base_currency)
+         VALUES ($1, $2, $3, $4, $5, 'INR')
+         RETURNING id, name`,
+        [tripName, req.user.id, departsDate, arrivesDate, 0.0]
+      );
+
+      resolvedTripId = newTripRes.rows[0].id;
+
+      await client.query(
+        `INSERT INTO trip_members (trip_id, user_id, role)
+         VALUES ($1, $2, 'owner')
+         ON CONFLICT (trip_id, user_id) DO NOTHING`,
+        [resolvedTripId, req.user.id]
+      );
+    }
+
+    // 4. Calculate prices with immutable currency conversion
+    const amountBase = parseFloat(transport.price);
+    const targetCurrency = (currency || req.user.display_currency || 'INR').toUpperCase();
+    const rateUsed = await getExchangeRateForCurrency(targetCurrency);
+    const amount = parseFloat((amountBase * rateUsed).toFixed(2));
+
+    // 5. Insert booking into `bookings` table
+    const bookingResult = await client.query(
+      `INSERT INTO bookings (
+         user_id, trip_id, transport_id, check_in, check_out,
+         status, amount, currency, amount_base, rate_used
+       ) VALUES ($1, $2, $3, $4, $5, 'confirmed', $6, $7, $8, $9)
+       RETURNING *`,
+      [
+        req.user.id,
+        resolvedTripId,
+        transport.id,
+        departsDate,
+        arrivesDate,
+        amount,
+        targetCurrency,
+        amountBase,
+        rateUsed,
+      ]
+    );
+
+    const booking = bookingResult.rows[0];
+
+    // 6. Concurrency-Safe Atomic Seat Assignment (ADR-005)
+    if (selectedSeatNo) {
+      const seatUpdate = await client.query(
+        `UPDATE seats 
+         SET booking_id = $1 
+         WHERE transport_id = $2 AND seat_no = $3 AND booking_id IS NULL
+         RETURNING id, seat_no`,
+        [booking.id, transport.id, selectedSeatNo]
+      );
+
+      if (seatUpdate.rowCount === 0) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({
+          success: false,
+          error: { message: `Seat ${selectedSeatNo} was just reserved by another traveler. Please select a different seat.` },
+        });
+      }
+    }
+
+    // 7. Create in-app notification
+    const passName = (passenger_name && passenger_name.trim()) || req.user.name;
+    const seatInfo = selectedSeatNo ? `Seat ${selectedSeatNo}` : 'Ticket Confirmed';
+    await client.query(
+      `INSERT INTO notifications (user_id, type, message)
+       VALUES ($1, 'booking', $2)`,
+      [
+        req.user.id,
+        `Transport booking confirmed: ${transport.operator} ${transport.number} (${transport.origin_city} → ${transport.dest_city}) for ${passName}. ${seatInfo}.`,
+      ]
+    );
+
+    // 8. Auto-link to itinerary
+    const departsTime = new Date(transport.departs_at).toISOString().split('T')[1].substring(0, 5);
+    await client.query(
+      `INSERT INTO itinerary_items (trip_id, day_number, position, time, title, notes, booking_id)
+       VALUES ($1, 1, 0, $2, $3, $4, $5)`,
+      [
+        resolvedTripId,
+        departsTime,
+        `Departure: ${transport.operator} ${transport.number}`,
+        `${transport.mode.toUpperCase()} from ${transport.origin_city} (${transport.origin_code}) to ${transport.dest_city} (${transport.destination_code}) - ${seatInfo}`,
+        booking.id,
+      ]
+    );
+
+    await client.query('COMMIT');
+
+    const refCode = `TM-TRP-${booking.id.toString().padStart(6, '0')}`;
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        booking: {
+          id: booking.id,
+          reference_code: refCode,
+          status: booking.status,
+          departs_at: transport.departs_at,
+          arrives_at: transport.arrives_at,
+          passenger_name: passName,
+          seat_no: selectedSeatNo || 'Standard / Unreserved',
+          amount: parseFloat(booking.amount),
+          currency: booking.currency,
+          amount_base: parseFloat(booking.amount_base),
+          rate_used: parseFloat(booking.rate_used),
+          created_at: booking.created_at,
+        },
+        transport: {
+          id: transport.id,
+          mode: transport.mode,
+          operator: transport.operator,
+          number: transport.number,
+          class: transport.class,
+          price: parseFloat(transport.price),
+          departs_at: transport.departs_at,
+          arrives_at: transport.arrives_at,
+          origin: {
+            code: transport.origin_code,
+            name: transport.origin_name,
+            city: transport.origin_city,
+          },
+          destination: {
+            code: transport.destination_code,
+            name: transport.dest_name,
+            city: transport.dest_city,
+          },
+        },
+        trip_id: resolvedTripId,
+      },
+      message: 'Transport booking confirmed successfully.',
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    next(err);
+  } finally {
+    client.release();
+  }
+}
+
 // GET /api/bookings - List all bookings for current user
 async function getMyBookings(req, res, next) {
   try {
@@ -267,9 +517,20 @@ async function getMyBookings(req, res, next) {
               h.name AS hotel_name, h.city AS hotel_city, h.stars AS hotel_stars,
               h.rating AS hotel_rating, h.image_url AS hotel_image_url,
               h.price_per_night AS hotel_price_per_night,
+              tr.mode AS transport_mode, tr.operator AS transport_operator,
+              tr.number AS transport_number, tr.class AS transport_class,
+              tr.price AS transport_price, tr.departs_at AS transport_departs_at,
+              tr.arrives_at AS transport_arrives_at,
+              s_orig.code AS origin_code, s_orig.name AS origin_name, s_orig.city AS origin_city,
+              s_dest.code AS dest_code, s_dest.name AS dest_name, s_dest.city AS dest_city,
+              s.seat_no AS seat_no,
               t.name AS trip_name
        FROM bookings b
        LEFT JOIN hotels h ON b.hotel_id = h.id
+       LEFT JOIN transport_options tr ON b.transport_id = tr.id
+       LEFT JOIN stations s_orig ON tr.origin_code = s_orig.code
+       LEFT JOIN stations s_dest ON tr.destination_code = s_dest.code
+       LEFT JOIN seats s ON s.booking_id = b.id
        LEFT JOIN trips t ON b.trip_id = t.id
        WHERE ${whereClause}
        ORDER BY b.created_at DESC`,
@@ -305,6 +566,28 @@ async function getMyBookings(req, res, next) {
               price_per_night: parseFloat(row.hotel_price_per_night),
             }
           : null,
+        transport: row.transport_id
+          ? {
+              id: row.transport_id,
+              mode: row.transport_mode,
+              operator: row.transport_operator,
+              number: row.transport_number,
+              class: row.transport_class,
+              seat_no: row.seat_no || 'Standard',
+              departs_at: row.transport_departs_at,
+              arrives_at: row.transport_arrives_at,
+              origin: {
+                code: row.origin_code,
+                name: row.origin_name,
+                city: row.origin_city,
+              },
+              destination: {
+                code: row.dest_code,
+                name: row.dest_name,
+                city: row.dest_city,
+              },
+            }
+          : null,
       })),
     });
   } catch (err) {
@@ -328,9 +611,20 @@ async function getBookingById(req, res, next) {
               h.name AS hotel_name, h.city AS hotel_city, h.stars AS hotel_stars,
               h.rating AS hotel_rating, h.image_url AS hotel_image_url,
               h.price_per_night AS hotel_price_per_night,
+              tr.mode AS transport_mode, tr.operator AS transport_operator,
+              tr.number AS transport_number, tr.class AS transport_class,
+              tr.price AS transport_price, tr.departs_at AS transport_departs_at,
+              tr.arrives_at AS transport_arrives_at,
+              s_orig.code AS origin_code, s_orig.name AS origin_name, s_orig.city AS origin_city,
+              s_dest.code AS dest_code, s_dest.name AS dest_name, s_dest.city AS dest_city,
+              s.seat_no AS seat_no,
               t.name AS trip_name
        FROM bookings b
        LEFT JOIN hotels h ON b.hotel_id = h.id
+       LEFT JOIN transport_options tr ON b.transport_id = tr.id
+       LEFT JOIN stations s_orig ON tr.origin_code = s_orig.code
+       LEFT JOIN stations s_dest ON tr.destination_code = s_dest.code
+       LEFT JOIN seats s ON s.booking_id = b.id
        LEFT JOIN trips t ON b.trip_id = t.id
        WHERE b.id = $1 AND b.user_id = $2`,
       [bookingId, req.user.id]
@@ -375,6 +669,28 @@ async function getBookingById(req, res, next) {
               price_per_night: parseFloat(row.hotel_price_per_night),
             }
           : null,
+        transport: row.transport_id
+          ? {
+              id: row.transport_id,
+              mode: row.transport_mode,
+              operator: row.transport_operator,
+              number: row.transport_number,
+              class: row.transport_class,
+              seat_no: row.seat_no || 'Standard',
+              departs_at: row.transport_departs_at,
+              arrives_at: row.transport_arrives_at,
+              origin: {
+                code: row.origin_code,
+                name: row.origin_name,
+                city: row.origin_city,
+              },
+              destination: {
+                code: row.dest_code,
+                name: row.dest_name,
+                city: row.dest_city,
+              },
+            }
+          : null,
       },
     });
   } catch (err) {
@@ -396,9 +712,11 @@ async function cancelBooking(req, res, next) {
 
     // IDOR check: booking must belong to user
     const checkResult = await client.query(
-      `SELECT b.*, h.name AS hotel_name 
+      `SELECT b.*, h.name AS hotel_name,
+              tr.operator AS transport_operator, tr.number AS transport_number
        FROM bookings b
        LEFT JOIN hotels h ON b.hotel_id = h.id
+       LEFT JOIN transport_options tr ON b.transport_id = tr.id
        WHERE b.id = $1 AND b.user_id = $2`,
       [bookingId, req.user.id]
     );
@@ -421,6 +739,17 @@ async function cancelBooking(req, res, next) {
 
     await client.query('BEGIN');
 
+    // 1. Release seat reservation if transport booking
+    if (booking.transport_id) {
+      await client.query(
+        `UPDATE seats 
+         SET booking_id = NULL 
+         WHERE booking_id = $1`,
+        [bookingId]
+      );
+    }
+
+    // 2. Update booking status
     const updateResult = await client.query(
       `UPDATE bookings 
        SET status = 'cancelled' 
@@ -429,8 +758,8 @@ async function cancelBooking(req, res, next) {
       [bookingId]
     );
 
-    // Create notification
-    const entityName = booking.hotel_name || 'Reservation';
+    // 3. Create notification
+    const entityName = booking.hotel_name || `${booking.transport_operator} ${booking.transport_number}` || 'Reservation';
     await client.query(
       `INSERT INTO notifications (user_id, type, message)
        VALUES ($1, 'booking', $2)`,
@@ -460,6 +789,7 @@ async function cancelBooking(req, res, next) {
 
 module.exports = {
   createHotelBooking,
+  createTransportBooking,
   getMyBookings,
   getBookingById,
   cancelBooking,

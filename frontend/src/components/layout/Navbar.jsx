@@ -24,6 +24,7 @@ export default function Navbar({ onOpenAuth, onOpenProfile, activeTab, setActive
     { id: 'trips', label: 'My Trips' },
     { id: 'hotels', label: 'Hotels' },
     { id: 'transport', label: 'Transport' },
+    { id: 'bookings', label: 'My Bookings' },
     { id: 'expenses', label: 'Expenses & Split' },
   ];
 

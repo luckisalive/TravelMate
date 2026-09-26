@@ -9,6 +9,9 @@ router.use(requireAuth);
 // POST /api/bookings/hotel - Book hotel
 router.post('/hotel', bookingController.createHotelBooking);
 
+// POST /api/bookings/transport - Book transport (flight/train/bus) with atomic seat reservation
+router.post('/transport', bookingController.createTransportBooking);
+
 // GET /api/bookings - List current user's bookings
 router.get('/', bookingController.getMyBookings);
 

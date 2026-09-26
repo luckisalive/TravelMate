@@ -8,10 +8,11 @@
     "dev": "node --watch server.js",
     "db:migrate": "node db/migrate.js",
     "db:seed": "node db/seeds/seed.js",
-    "test": "node tests/test_auth.js && node tests/test_seed.js && node tests/test_hotel.js",
+    "test": "node tests/test_auth.js && node tests/test_seed.js && node tests/test_hotel.js && node tests/test_transport.js",
     "test:auth": "node tests/test_auth.js",
     "test:seed": "node tests/test_seed.js",
-    "test:hotel": "node tests/test_hotel.js"
+    "test:hotel": "node tests/test_hotel.js",
+    "test:transport": "node tests/test_transport.js"
   },
   "keywords": [],
   "author": "",
