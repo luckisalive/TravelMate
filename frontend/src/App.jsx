@@ -12,6 +12,7 @@ import TripsListView from './components/trips/TripsListView';
 import TripDetailView from './components/trips/TripDetailView';
 import CostEstimatorModal from './components/estimator/CostEstimatorModal';
 import { ToastProvider } from './context/ToastContext';
+import { Analytics } from '@vercel/analytics/react';
 import { 
   Building2, 
   Plane, 
@@ -390,6 +391,7 @@ export default function App() {
       <CurrencyProvider>
         <ToastProvider>
           <MainContent />
+          <Analytics />
         </ToastProvider>
       </CurrencyProvider>
     </AuthProvider>
