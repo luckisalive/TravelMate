@@ -4,6 +4,7 @@ const seedStations = require('./seedStations');
 const seedHotels = require('./seedHotels');
 const seedTransport = require('./seedTransport');
 const seedSeats = require('./seedSeats');
+const seedUsers = require('./seedUsers');
 
 /**
  * Master Seed Orchestration Script for TravelMate
@@ -42,8 +43,13 @@ async function runMasterSeed() {
     console.log('');
 
     // 5. Seed Flight Seats
-    console.log('[5/5] Flight Seats Grid (30 rows x 6 columns A-F):');
+    console.log('[5/6] Flight Seats Grid (30 rows x 6 columns A-F):');
     const seatsResult = await seedSeats({ clean: isClean });
+    console.log('');
+
+    // 6. Seed Demo Users (Alice, Bob, Charlie)
+    console.log('[6/6] Demo Personas & Authentication Accounts:');
+    await seedUsers();
     console.log('');
 
     // Query final row counts for comprehensive audit
