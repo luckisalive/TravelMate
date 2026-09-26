@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import api from '../../services/api';
+import HotelReviewsList from '../reviews/HotelReviewsList';
 
 export default function HotelDetailModal({ hotel, isOpen, onClose, onBookingSuccess, onOpenAuth }) {
   const { user } = useAuth();
@@ -310,6 +311,9 @@ export default function HotelDetailModal({ hotel, isOpen, onClose, onBookingSucc
                     ))}
                   </div>
                 </div>
+
+                {/* Verified Guest Reviews (Phase 8) */}
+                <HotelReviewsList hotelId={hotel.id} />
 
                 {/* Honest viva disclaimer */}
                 <div className="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-4 text-xs text-amber-900 space-y-1">

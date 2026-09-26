@@ -10,6 +10,10 @@ const tripRoutes = require('./routes/tripRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const transportRoutes = require('./routes/transportRoutes');
 const settlementRoutes = require('./routes/settlementRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+const recommendationRoutes = require('./routes/recommendationRoutes');
+const estimatorRoutes = require('./routes/estimatorRoutes');
 const { startRateSyncCron } = require('./services/rateSyncService');
 
 const app = express();
@@ -40,6 +44,10 @@ app.use('/api/trips', tripRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/transport', transportRoutes);
 app.use('/api/settlements', settlementRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/recommendations', recommendationRoutes);
+app.use('/api/estimator', estimatorRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

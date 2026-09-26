@@ -3,6 +3,8 @@ const router = express.Router();
 const tripController = require('../controllers/tripController');
 const expenseController = require('../controllers/expenseController');
 const settlementController = require('../controllers/settlementController');
+const itineraryController = require('../controllers/itineraryController');
+const estimatorController = require('../controllers/estimatorController');
 const { requireAuth } = require('../middleware/auth');
 
 // All trip & expense routes require authentication
@@ -63,4 +65,29 @@ router.post('/:id/settlements', settlementController.recordSettlement);
 // DELETE /api/trips/:id/settlements/:settlementId - Delete settlement record
 router.delete('/:id/settlements/:settlementId', settlementController.deleteSettlement);
 
+// --- Itinerary Planner Routes ---
+// GET /api/trips/:id/itinerary - Day-wise activities and unlinked bookings
+router.get('/:id/itinerary', itineraryController.getTripItinerary);
+
+// POST /api/trips/:id/itinerary - Add activity
+router.post('/:id/itinerary', itineraryController.createItineraryItem);
+
+// POST /api/trips/:id/itinerary/sync-bookings - Auto-link transport & hotel bookings
+router.post('/:id/itinerary/sync-bookings', itineraryController.syncBookingsToItinerary);
+
+// POST /api/trips/:id/itinerary/reorder - Reorder activities
+router.post('/:id/itinerary/reorder', itineraryController.reorderItineraryItems);
+
+// PUT /api/trips/:id/itinerary/:itemId - Update activity
+router.put('/:id/itinerary/:itemId', itineraryController.updateItineraryItem);
+
+// DELETE /api/trips/:id/itinerary/:itemId - Delete activity
+router.delete('/:id/itinerary/:itemId', itineraryController.deleteItineraryItem);
+
+// --- Trip Cost Estimator Route ---
+// POST & GET /api/trips/:id/estimate - Calculate predicted cost vs budget
+router.post('/:id/estimate', estimatorController.getTripEstimate);
+router.get('/:id/estimate', estimatorController.getTripEstimate);
+
 module.exports = router;
+

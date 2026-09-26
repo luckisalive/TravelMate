@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const NotificationService = require('../services/notificationService');
 
 // Helper to verify user has access to trip (IDOR protection per ADR-010)
 async function verifyTripMembership(userId, tripId) {
@@ -297,6 +298,18 @@ async function recordSettlement(req, res, next) {
     );
 
     const settlement = insertResult.rows[0];
+
+    // Send notifications to debtor and creditor
+    await NotificationService.createNotification({
+      userId: toUserId,
+      type: 'settlement',
+      message: `${fromUserInfo.name} recorded a settlement of ₹${parsedAmount.toFixed(2)} to you for trip "${trip.name}".`,
+    });
+    await NotificationService.createNotification({
+      userId: fromUserId,
+      type: 'settlement',
+      message: `You recorded a settlement payment of ₹${parsedAmount.toFixed(2)} to ${toUserInfo.name} for trip "${trip.name}".`,
+    });
 
     return res.status(201).json({
       success: true,

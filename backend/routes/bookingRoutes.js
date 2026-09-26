@@ -22,4 +22,9 @@ router.get('/:id', bookingController.getBookingById);
 router.patch('/:id/cancel', bookingController.cancelBooking);
 router.post('/:id/cancel', bookingController.cancelBooking);
 
+// PATCH /api/bookings/:id/complete & POST /api/bookings/:id/complete - Mark booking completed
+router.patch('/:id/complete', bookingController.completeBooking);
+router.post('/:id/complete', bookingController.completeBooking);
+
 module.exports = router;
+

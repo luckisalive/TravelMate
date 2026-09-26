@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Compass, User, LogOut, Sparkles, Globe, Menu, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../context/CurrencyContext';
+import NotificationCenter from '../notifications/NotificationCenter';
 
 export default function Navbar({ onOpenAuth, onOpenProfile, activeTab, setActiveTab }) {
   const { user, logout } = useAuth();
@@ -120,6 +121,8 @@ export default function Navbar({ onOpenAuth, onOpenProfile, activeTab, setActive
 
           {user ? (
             <div className="flex items-center gap-2">
+              <NotificationCenter onNavigateTab={handleNavClick} />
+
               <button
                 onClick={onOpenProfile}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors text-left"

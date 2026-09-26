@@ -787,10 +787,69 @@ async function cancelBooking(req, res, next) {
   }
 }
 
+// PATCH & POST /api/bookings/:id/complete - Mark booking as completed
+async function completeBooking(req, res, next) {
+  try {
+    const bookingId = parseInt(req.params.id, 10);
+    if (isNaN(bookingId)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid booking ID format.' },
+      });
+    }
+
+    const checkResult = await db.query(
+      `SELECT b.*, h.name AS hotel_name, tr.operator, tr.number
+       FROM bookings b
+       LEFT JOIN hotels h ON b.hotel_id = h.id
+       LEFT JOIN transport_options tr ON b.transport_id = tr.id
+       WHERE b.id = $1 AND b.user_id = $2`,
+      [bookingId, req.user.id]
+    );
+
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Booking not found or unauthorized.' },
+      });
+    }
+
+    const booking = checkResult.rows[0];
+    if (booking.status === 'cancelled') {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Cannot complete a cancelled booking.' },
+      });
+    }
+
+    const updateResult = await db.query(
+      `UPDATE bookings SET status = 'completed' WHERE id = $1 RETURNING *`,
+      [bookingId]
+    );
+
+    const title = booking.hotel_name || `${booking.operator || 'Transport'} ${booking.number || ''}`.trim();
+    await db.query(
+      `INSERT INTO notifications (user_id, type, message)
+       VALUES ($1, 'booking', $2)`,
+      [req.user.id, `Your trip/stay at ${title} is completed! You can now leave a review.`]
+    );
+
+    return res.json({
+      success: true,
+      data: updateResult.rows[0],
+      message: 'Booking marked as completed.',
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   createHotelBooking,
   createTransportBooking,
   getMyBookings,
   getBookingById,
   cancelBooking,
+  completeBooking,
 };
+

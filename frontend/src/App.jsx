@@ -10,6 +10,7 @@ import TransportSearch from './components/transport/TransportSearch';
 import MyBookingsView from './components/hotels/MyBookingsView';
 import TripsListView from './components/trips/TripsListView';
 import TripDetailView from './components/trips/TripDetailView';
+import CostEstimatorModal from './components/estimator/CostEstimatorModal';
 import { 
   Building2, 
   Plane, 
@@ -22,7 +23,8 @@ import {
   ArrowUpRight, 
   Ticket, 
   Wallet,
-  Lock
+  Lock,
+  Calculator
 } from 'lucide-react';
 
 function MainContent() {
@@ -32,6 +34,7 @@ function MainContent() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
   const [selectedTripId, setSelectedTripId] = useState(null);
+  const [estimatorModalOpen, setEstimatorModalOpen] = useState(false);
 
   const openAuth = (mode) => {
     setAuthMode(mode);
@@ -215,6 +218,16 @@ function MainContent() {
                   badge: 'Unified',
                   onClick: () => setActiveTab('bookings'),
                 },
+                {
+                  id: 'estimator',
+                  title: 'Trip Cost Estimator',
+                  desc: 'Predict and compare expenditure across budget, balanced, and comfort styles.',
+                  icon: Calculator,
+                  color: 'from-amber-500 to-rose-500',
+                  bg: 'bg-amber-50',
+                  badge: 'Phase 8 Live',
+                  onClick: () => setEstimatorModalOpen(true),
+                },
               ].map((card) => {
                 const IconComponent = card.icon;
                 return (
@@ -359,6 +372,12 @@ function MainContent() {
       <ProfileModal
         isOpen={profileModalOpen}
         onClose={() => setProfileModalOpen(false)}
+      />
+
+      {/* Standalone Cost Estimator Modal (Phase 8) */}
+      <CostEstimatorModal
+        isOpen={estimatorModalOpen}
+        onClose={() => setEstimatorModalOpen(false)}
       />
     </div>
   );

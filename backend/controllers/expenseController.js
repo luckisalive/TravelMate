@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const { convertToBase } = require('../utils/currency');
+const NotificationService = require('../services/notificationService');
 
 const VALID_CATEGORIES = ['Food', 'Transport', 'Stay', 'Activity', 'Shopping', 'Other'];
 
@@ -377,6 +378,37 @@ async function createExpense(req, res, next) {
     }
 
     await client.query('COMMIT');
+
+    // Asynchronously check budget alerts
+    try {
+      const budget = parseFloat(trip.budget) || 0;
+      if (budget > 0) {
+        const spentRes = await db.query(
+          `SELECT COALESCE(SUM(amount_base), 0) AS total_exp FROM expenses WHERE trip_id = $1`,
+          [tripId]
+        );
+        const bookingRes = await db.query(
+          `SELECT COALESCE(SUM(amount_base), 0) AS total_book FROM bookings WHERE trip_id = $1 AND status <> 'cancelled'`,
+          [tripId]
+        );
+        const totalSpent = parseFloat(spentRes.rows[0].total_exp) + parseFloat(bookingRes.rows[0].total_book);
+        if (totalSpent > budget) {
+          await NotificationService.createNotification({
+            userId: trip.created_by,
+            type: 'budget',
+            message: `⚠️ Budget Alert: Trip "${trip.name}" has exceeded its budget of ₹${budget.toFixed(2)} (Total Spent: ₹${totalSpent.toFixed(2)})!`,
+          });
+        } else if (totalSpent >= 0.8 * budget) {
+          await NotificationService.createNotification({
+            userId: trip.created_by,
+            type: 'budget',
+            message: `Notice: Trip "${trip.name}" has reached ${Math.round((totalSpent / budget) * 100)}% of its budget (₹${totalSpent.toFixed(2)} / ₹${budget.toFixed(2)}).`,
+          });
+        }
+      }
+    } catch (notifErr) {
+      console.warn('[createExpense] Budget notification check failed:', notifErr.message);
+    }
 
     // Fetch payer info for response
     const payerInfo = await db.query(`SELECT name, email FROM users WHERE id = $1`, [payerId]);

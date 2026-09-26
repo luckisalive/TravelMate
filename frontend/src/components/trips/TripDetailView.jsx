@@ -27,7 +27,9 @@ import {
   Plane,
   X,
   UserCheck,
-  Scale
+  Scale,
+  Calculator,
+  MapPin
 } from 'lucide-react';
 import { 
   PieChart, 
@@ -48,6 +50,8 @@ import { useAuth } from '../../context/AuthContext';
 import ExpenseModal from './ExpenseModal';
 import TripModal from './TripModal';
 import TripBalancesView from './TripBalancesView';
+import ItineraryView from '../itinerary/ItineraryView';
+import CostEstimatorModal from '../estimator/CostEstimatorModal';
 
 const CATEGORY_COLORS = {
   Food: '#F59E0B',       // Amber
@@ -84,6 +88,7 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [editTripModalOpen, setEditTripModalOpen] = useState(false);
+  const [estimatorModalOpen, setEstimatorModalOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
@@ -281,6 +286,15 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
             >
               <Plus className="w-4 h-4" />
               <span>Log Expense</span>
+            </button>
+
+            <button
+              onClick={() => setEstimatorModalOpen(true)}
+              className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 font-semibold text-xs shadow-2xs flex items-center gap-2 transition-colors cursor-pointer"
+              title="Estimate Trip Budget"
+            >
+              <Calculator className="w-4 h-4 text-indigo-600" />
+              <span>Cost Estimator</span>
             </button>
 
             {isOwner && (
@@ -526,6 +540,22 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
             <span>Trip Bookings</span>
             <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
               {trip.bookings?.length || 0}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('itinerary')}
+            className={`pb-3 text-sm font-bold transition-all relative ${
+              activeSubTab === 'itinerary'
+                ? 'text-indigo-600 border-b-2 border-indigo-600'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span className="flex items-center gap-1.5">
+              <span>Itinerary</span>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800">
+                Plan
+              </span>
             </span>
           </button>
 
@@ -844,9 +874,24 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
             onRefreshTrip={fetchTripDetails}
           />
         )}
+
+        {/* SUBTAB 5: DAY-WISE ITINERARY (Phase 8) */}
+        {activeSubTab === 'itinerary' && (
+          <ItineraryView tripId={tripId} />
+        )}
       </div>
 
       {/* MODALS */}
+      {estimatorModalOpen && (
+        <CostEstimatorModal
+          isOpen={estimatorModalOpen}
+          onClose={() => setEstimatorModalOpen(false)}
+          tripId={tripId}
+          initialBudget={trip?.budget}
+          initialDays={trip?.duration_days}
+        />
+      )}
+
       {expenseModalOpen && (
         <ExpenseModal
           isOpen={expenseModalOpen}

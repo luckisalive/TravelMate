@@ -20,6 +20,7 @@ import {
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import BoardingPassModal from '../transport/BoardingPassModal';
+import ReviewModal from '../reviews/ReviewModal';
 
 export default function MyBookingsView({ onExploreHotels, onExploreTransport }) {
   const { user } = useAuth();
@@ -31,9 +32,11 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
   const [cancelModalBooking, setCancelModalBooking] = useState(null);
   const [voucherModalBooking, setVoucherModalBooking] = useState(null);
   const [boardingPassBooking, setBoardingPassBooking] = useState(null);
+  const [reviewModalBooking, setReviewModalBooking] = useState(null);
+  const [reviewedBookingIds, setReviewedBookingIds] = useState(new Set());
   const [actionMessage, setActionMessage] = useState(null);
 
-  // Fetch bookings
+  // Fetch bookings and user reviews
   const loadBookings = async () => {
     setLoading(true);
     try {
@@ -41,9 +44,15 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
       if (typeFilter !== 'all') {
         params.type = typeFilter;
       }
-      const res = await api.get('/bookings', { params });
-      if (res.data?.success) {
-        setBookings(res.data.data);
+      const [bookRes, revRes] = await Promise.all([
+        api.get('/bookings', { params }),
+        api.get('/reviews/my').catch(() => ({ data: { success: false } })),
+      ]);
+      if (bookRes.data?.success) {
+        setBookings(bookRes.data.data);
+      }
+      if (revRes.data?.success && Array.isArray(revRes.data.data)) {
+        setReviewedBookingIds(new Set(revRes.data.data.map((r) => r.booking_id)));
       }
     } catch (err) {
       console.error('Failed to load bookings:', err);
@@ -84,6 +93,24 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
     } finally {
       setCancellingId(null);
       setCancelModalBooking(null);
+    }
+  };
+
+  const handleCompleteBooking = async (bookingId) => {
+    try {
+      const res = await api.patch(`/bookings/${bookingId}/complete`);
+      if (res.data?.success) {
+        setActionMessage({
+          type: 'success',
+          text: 'Reservation marked as completed! You can now rate and review your experience.',
+        });
+        loadBookings();
+      }
+    } catch (err) {
+      setActionMessage({
+        type: 'error',
+        text: err.response?.data?.error?.message || 'Failed to complete reservation.',
+      });
     }
   };
 
@@ -354,14 +381,14 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
                 </div>
 
                 {/* Card Actions */}
-                <div className="p-4 flex items-center justify-between gap-2">
+                <div className="p-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/60 rounded-b-3xl">
                   {isHotel ? (
                     <button
                       onClick={() => setVoucherModalBooking(booking)}
                       className="flex-1 py-2 px-3 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors flex items-center justify-center gap-1.5"
                     >
                       <Printer className="w-3.5 h-3.5" />
-                      <span>View Hotel Voucher</span>
+                      <span>View Voucher</span>
                     </button>
                   ) : (
                     <button
@@ -369,18 +396,44 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
                       className="flex-1 py-2 px-3 text-xs font-bold text-white bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5"
                     >
                       <Ticket className="w-3.5 h-3.5" />
-                      <span>View E-Ticket / Boarding Pass</span>
+                      <span>E-Ticket</span>
                     </button>
                   )}
 
-                  {isConfirmed && (
-                    <button
-                      onClick={() => setCancelModalBooking(booking)}
-                      className="py-2 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-xl transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  )}
+                  {/* Reviews & Complete (Phase 8) */}
+                  {booking.status === 'completed' ? (
+                    reviewedBookingIds.has(booking.id) ? (
+                      <span className="py-2 px-3 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <span>Reviewed</span>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setReviewModalBooking(booking)}
+                        className="py-2 px-3 text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 rounded-xl transition-colors flex items-center gap-1 shadow-xs"
+                      >
+                        <Star className="w-3.5 h-3.5" />
+                        <span>Write Review</span>
+                      </button>
+                    )
+                  ) : isConfirmed ? (
+                    <>
+                      <button
+                        onClick={() => handleCompleteBooking(booking.id)}
+                        className="py-2 px-3 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 border border-indigo-200 rounded-xl transition-colors"
+                        title="Mark completed to unlock reviews"
+                      >
+                        Mark Completed
+                      </button>
+
+                      <button
+                        onClick={() => setCancelModalBooking(booking)}
+                        className="py-2 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-xl transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : null}
                 </div>
               </div>
             );
@@ -488,6 +541,22 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
             </div>
           </div>
         </div>
+      )}
+
+      {/* Review Modal (Phase 8) */}
+      {reviewModalBooking && (
+        <ReviewModal
+          isOpen={Boolean(reviewModalBooking)}
+          onClose={() => setReviewModalBooking(null)}
+          booking={reviewModalBooking}
+          onReviewSubmitted={() => {
+            setActionMessage({
+              type: 'success',
+              text: 'Review published! Thank you for your feedback.',
+            });
+            loadBookings();
+          }}
+        />
       )}
     </div>
   );
