@@ -18,10 +18,13 @@ import {
 import api from '../../services/api';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import SettleUpModal from './SettleUpModal';
+import { BalancesSkeleton } from '../common/Skeletons';
 
 export default function TripBalancesView({ tripId, trip, onRefreshTrip }) {
   const { user } = useAuth();
+  const toast = useToast();
   const { formatPrice } = useCurrency();
 
   const [balanceData, setBalanceData] = useState(null);
@@ -64,22 +67,18 @@ export default function TripBalancesView({ tripId, trip, onRefreshTrip }) {
     try {
       setDeletingId(settlementId);
       await api.delete(`/settlements/${settlementId}`);
+      toast.success('Settlement record deleted');
       await fetchBalances();
       if (onRefreshTrip) onRefreshTrip();
     } catch (err) {
-      alert(err.response?.data?.error?.message || 'Failed to delete settlement.');
+      toast.error(err.response?.data?.error?.message || 'Failed to delete settlement.');
     } finally {
       setDeletingId(null);
     }
   };
 
   if (loading && !balanceData) {
-    return (
-      <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-3">
-        <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
-        <span className="text-xs font-semibold">Calculating net balances & debt graph...</span>
-      </div>
-    );
+    return <BalancesSkeleton />;
   }
 
   if (error && !balanceData) {

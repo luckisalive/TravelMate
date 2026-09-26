@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, FileText, X, Loader2, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 
 export default function ActivityModal({
   isOpen,
@@ -11,6 +12,7 @@ export default function ActivityModal({
   activity = null, // if editing
   onSaved,
 }) {
+  const toast = useToast();
   if (!isOpen) return null;
 
   const [dayNumber, setDayNumber] = useState(activity ? activity.day_number : initialDay || 1);
@@ -63,11 +65,14 @@ export default function ActivityModal({
       }
 
       if (res.data.success) {
+        toast.success(activity ? 'Activity updated successfully!' : 'Activity added to itinerary!');
         if (onSaved) onSaved(res.data.data);
         onClose();
       }
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to save activity.');
+      const msg = err.response?.data?.error?.message || 'Failed to save activity.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

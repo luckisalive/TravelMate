@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Star, MessageSquare, User, Loader2 } from 'lucide-react';
+import { Star, MessageSquare, User } from 'lucide-react';
 import api from '../../services/api';
+import { ReviewsListSkeleton } from '../common/Skeletons';
 
 export default function HotelReviewsList({ hotelId }) {
   const [reviewsData, setReviewsData] = useState(null);
@@ -31,12 +32,7 @@ export default function HotelReviewsList({ hotelId }) {
   }, [hotelId]);
 
   if (loading) {
-    return (
-      <div className="py-6 flex items-center justify-center text-slate-400 gap-2">
-        <Loader2 className="w-4 h-4 animate-spin" />
-        <span className="text-xs">Loading verified guest reviews...</span>
-      </div>
-    );
+    return <ReviewsListSkeleton count={3} />;
   }
 
   const reviews = reviewsData?.reviews || [];

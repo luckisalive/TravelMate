@@ -12,8 +12,10 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 
 export default function NotificationCenter({ onNavigateTab }) {
+  const toast = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -73,9 +75,11 @@ export default function NotificationCenter({ onNavigateTab }) {
       if (res.data.success) {
         setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
         setUnreadCount(0);
+        toast.success('All notifications marked as read');
       }
     } catch (err) {
       console.error(err);
+      toast.error('Failed to mark notifications as read');
     }
   };
 
@@ -86,6 +90,7 @@ export default function NotificationCenter({ onNavigateTab }) {
       if (res.data.success) {
         setNotifications((prev) => prev.filter((n) => n.id !== id));
         setUnreadCount(res.data.unread_count);
+        toast.info('Notification dismissed');
       }
     } catch (err) {
       console.error(err);
@@ -148,7 +153,7 @@ export default function NotificationCenter({ onNavigateTab }) {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-84 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden transform transition-all">
+        <div className="absolute -right-16 sm:right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-sm sm:max-w-none bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden transform transition-all">
           {/* Header */}
           <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-2">

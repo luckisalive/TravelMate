@@ -12,11 +12,13 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useToast } from '../../context/ToastContext';
 import api from '../../services/api';
 import HotelReviewsList from '../reviews/HotelReviewsList';
 
 export default function HotelDetailModal({ hotel, isOpen, onClose, onBookingSuccess, onOpenAuth }) {
   const { user } = useAuth();
+  const toast = useToast();
   const { formatPrice, displayCurrency } = useCurrency();
 
   // Booking Form State
@@ -121,6 +123,7 @@ export default function HotelDetailModal({ hotel, isOpen, onClose, onBookingSucc
 
       const res = await api.post('/bookings/hotel', payload);
       if (res.data?.success) {
+        toast.success(`Hotel booked at ${hotel.name}! Confirmation #${res.data.data.booking.reference_code}`);
         setConfirmedBooking(res.data.data);
         if (onBookingSuccess) {
           onBookingSuccess(res.data.data);
@@ -129,6 +132,7 @@ export default function HotelDetailModal({ hotel, isOpen, onClose, onBookingSucc
     } catch (err) {
       const msg = err.response?.data?.error?.message || 'Failed to complete hotel booking.';
       setError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }

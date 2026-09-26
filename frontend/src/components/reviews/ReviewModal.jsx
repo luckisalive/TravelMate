@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Star, X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 
 export default function ReviewModal({ isOpen, onClose, booking, onReviewSubmitted }) {
+  const toast = useToast();
   if (!isOpen || !booking) return null;
 
   const [rating, setRating] = useState(5);
@@ -33,13 +35,16 @@ export default function ReviewModal({ isOpen, onClose, booking, onReviewSubmitte
 
       if (res.data.success) {
         setSuccess(true);
+        toast.success('Review published! Thank you for sharing your feedback.');
         setTimeout(() => {
           if (onReviewSubmitted) onReviewSubmitted(res.data.data);
           onClose();
         }, 1200);
       }
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to submit review. Please try again.');
+      const msg = err.response?.data?.error?.message || 'Failed to submit review. Please try again.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

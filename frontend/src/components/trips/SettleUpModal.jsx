@@ -11,6 +11,7 @@ import {
 import api from '../../services/api';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 export default function SettleUpModal({
   isOpen,
@@ -22,6 +23,7 @@ export default function SettleUpModal({
   baseCurrency = 'INR',
 }) {
   const { user } = useAuth();
+  const toast = useToast();
   const { formatPrice } = useCurrency();
 
   const [fromUser, setFromUser] = useState('');
@@ -82,16 +84,22 @@ export default function SettleUpModal({
       });
 
       if (res.data?.success) {
-        setSuccess(res.data.message || 'Settlement recorded successfully!');
+        const msg = res.data.message || 'Settlement recorded successfully!';
+        setSuccess(msg);
+        toast.success(msg);
         if (onSettled) onSettled(res.data.data);
         setTimeout(() => {
           onClose();
         }, 1200);
       } else {
-        setError(res.data?.error?.message || 'Failed to record settlement.');
+        const msg = res.data?.error?.message || 'Failed to record settlement.';
+        setError(msg);
+        toast.error(msg);
       }
     } catch (err) {
-      setError(err.response?.data?.error?.message || err.message || 'Error recording settlement.');
+      const msg = err.response?.data?.error?.message || err.message || 'Error recording settlement.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

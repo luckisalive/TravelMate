@@ -22,6 +22,7 @@ import {
 import api from '../../services/api';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 const CATEGORIES = [
   { id: 'Food', label: 'Food & Dining', icon: Utensils, color: 'text-amber-600 bg-amber-50 border-amber-200' },
@@ -42,6 +43,7 @@ export default function ExpenseModal({
 }) {
   const { supportedCurrencies, displayCurrency, rates } = useCurrency();
   const { user } = useAuth();
+  const toast = useToast();
 
   const [category, setCategory] = useState('Food');
   const [amount, setAmount] = useState('');
@@ -215,13 +217,18 @@ export default function ExpenseModal({
       }
 
       if (res.data?.success) {
+        toast.success(initialExpense?.id ? 'Expense updated successfully!' : 'Expense recorded successfully!');
         onSaved(res.data.data);
         onClose();
       } else {
-        setError(res.data?.error?.message || 'Failed to save expense.');
+        const msg = res.data?.error?.message || 'Failed to save expense.';
+        setError(msg);
+        toast.error(msg);
       }
     } catch (err) {
-      setError(err.response?.data?.error?.message || err.message || 'Error saving expense.');
+      const msg = err.response?.data?.error?.message || err.message || 'Error saving expense.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

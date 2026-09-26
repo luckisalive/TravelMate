@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { X, Calendar, Wallet, Tag, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useToast } from '../../context/ToastContext';
 
 export default function TripModal({ isOpen, onClose, onSaved, initialTrip = null }) {
   const { supportedCurrencies, displayCurrency } = useCurrency();
+  const toast = useToast();
   const [name, setName] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -80,13 +82,18 @@ export default function TripModal({ isOpen, onClose, onSaved, initialTrip = null
       }
 
       if (res.data?.success) {
+        toast.success(initialTrip?.id ? 'Trip updated successfully!' : 'Trip created successfully!');
         onSaved(res.data.data);
         onClose();
       } else {
-        setError(res.data?.error?.message || 'Failed to save trip.');
+        const msg = res.data?.error?.message || 'Failed to save trip.';
+        setError(msg);
+        toast.error(msg);
       }
     } catch (err) {
-      setError(err.response?.data?.error?.message || err.message || 'Error saving trip.');
+      const msg = err.response?.data?.error?.message || err.message || 'Error saving trip.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

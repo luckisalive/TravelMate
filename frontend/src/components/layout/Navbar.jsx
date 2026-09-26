@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Compass, User, LogOut, Sparkles, Globe, Menu, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useToast } from '../../context/ToastContext';
 import NotificationCenter from '../notifications/NotificationCenter';
 
 export default function Navbar({ onOpenAuth, onOpenProfile, activeTab, setActiveTab }) {
   const { user, logout } = useAuth();
+  const toast = useToast();
   const { displayCurrency, setCurrency, supportedCurrencies } = useCurrency();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
@@ -141,9 +143,12 @@ export default function Navbar({ onOpenAuth, onOpenProfile, activeTab, setActive
               </button>
 
               <button
-                onClick={logout}
+                onClick={() => {
+                  logout();
+                  toast.info('Signed out of TravelMate');
+                }}
                 title="Sign Out"
-                className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -152,13 +157,13 @@ export default function Navbar({ onOpenAuth, onOpenProfile, activeTab, setActive
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onOpenAuth('login')}
-                className="px-3.5 py-1.5 text-sm font-medium text-slate-700 hover:text-indigo-600 transition-colors"
+                className="px-3.5 py-1.5 text-sm font-medium text-slate-700 hover:text-indigo-600 transition-colors cursor-pointer"
               >
                 Sign In
               </button>
               <button
                 onClick={() => onOpenAuth('register')}
-                className="px-4 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors"
+                className="px-4 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors cursor-pointer"
               >
                 Get Started
               </button>
@@ -168,7 +173,8 @@ export default function Navbar({ onOpenAuth, onOpenProfile, activeTab, setActive
           {/* Mobile Menu Toggle Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -177,20 +183,81 @@ export default function Navbar({ onOpenAuth, onOpenProfile, activeTab, setActive
 
       {/* Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1 animate-in slide-in-from-top-2 duration-150">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleNavClick(item.id)}
-              className={`w-full text-left px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === item.id
-                  ? 'bg-indigo-50 text-indigo-700 font-bold'
-                  : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+        <div className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-2 animate-in slide-in-from-top-2 duration-150">
+          <div className="space-y-1">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleNavClick(item.id)}
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
+                  activeTab === item.id
+                    ? 'bg-indigo-50 text-indigo-700 font-bold'
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Mobile Profile & Actions */}
+          <div className="pt-2 border-t border-slate-100">
+            {user ? (
+              <div className="space-y-2 pt-1">
+                <div 
+                  onClick={() => {
+                    onOpenProfile();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-800">{user.name}</div>
+                      <div className="text-[10px] text-slate-400">{user.email}</div>
+                    </div>
+                  </div>
+                  {getStyleBadge(user.travel_style)}
+                </div>
+
+                <button
+                  onClick={() => {
+                    logout();
+                    toast.info('Signed out of TravelMate');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full py-2 px-3 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <button
+                  onClick={() => {
+                    onOpenAuth('login');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="py-2.5 px-3 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl text-center transition-colors cursor-pointer"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    onOpenAuth('register');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="py-2.5 px-3 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl text-center shadow-xs transition-colors cursor-pointer"
+                >
+                  Get Started
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </header>

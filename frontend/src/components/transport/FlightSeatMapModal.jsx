@@ -6,16 +6,17 @@ import {
   AlertCircle, 
   Loader2, 
   ShieldCheck, 
-  Armchair, 
-  Sparkles,
-  Info
+  Armchair
 } from 'lucide-react';
 import api from '../../services/api';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
+import { FlightSeatMapSkeleton } from '../common/Skeletons';
 
 export default function FlightSeatMapModal({ isOpen, onClose, transport, onBookingSuccess, onOpenAuth }) {
   const { user } = useAuth();
+  const toast = useToast();
   const { displayCurrency, formatPrice } = useCurrency();
 
   const [seatsData, setSeatsData] = useState(null);
@@ -97,6 +98,7 @@ export default function FlightSeatMapModal({ isOpen, onClose, transport, onBooki
       const res = await api.post('/bookings/transport', payload);
 
       if (res.data?.success) {
+        toast.success(`Seat ${selectedSeat.seat_no} confirmed! Confirmation #${res.data.data.booking.reference_code}`);
         onBookingSuccess(res.data.data);
         onClose();
       }
@@ -197,10 +199,7 @@ export default function FlightSeatMapModal({ isOpen, onClose, transport, onBooki
             </div>
 
             {loadingSeats ? (
-              <div className="py-24 flex flex-col items-center justify-center gap-3 text-slate-400">
-                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-                <span className="text-xs">Loading flight cabin seat map...</span>
-              </div>
+              <FlightSeatMapSkeleton />
             ) : (
               /* Airplane Cabin Fuselage */
               <div className="w-full max-w-md bg-slate-50 border-2 border-slate-300 rounded-[50px_50px_20px_20px] p-4 sm:p-6 shadow-inner relative flex flex-col items-center">

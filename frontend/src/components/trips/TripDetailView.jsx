@@ -11,7 +11,6 @@ import {
   Trash2, 
   Users, 
   Search, 
-  Filter, 
   Receipt, 
   Utensils, 
   Car, 
@@ -19,7 +18,6 @@ import {
   Compass, 
   ShoppingBag, 
   MoreHorizontal, 
-  Sparkles,
   PieChart as PieIcon,
   BarChart3,
   UserPlus,
@@ -27,9 +25,7 @@ import {
   Plane,
   X,
   UserCheck,
-  Scale,
-  Calculator,
-  MapPin
+  Calculator
 } from 'lucide-react';
 import { 
   PieChart, 
@@ -47,11 +43,14 @@ import {
 import api from '../../services/api';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import ExpenseModal from './ExpenseModal';
 import TripModal from './TripModal';
 import TripBalancesView from './TripBalancesView';
 import ItineraryView from '../itinerary/ItineraryView';
 import CostEstimatorModal from '../estimator/CostEstimatorModal';
+import { TripDetailSkeleton } from '../common/Skeletons';
+import EmptyState from '../common/EmptyState';
 
 const CATEGORY_COLORS = {
   Food: '#F59E0B',       // Amber
@@ -73,6 +72,7 @@ const CATEGORY_ICONS = {
 
 export default function TripDetailView({ tripId, onBack, onNavigateToBookings }) {
   const { user } = useAuth();
+  const toast = useToast();
   const { formatPrice, displayCurrency } = useCurrency();
 
   const [trip, setTrip] = useState(null);
@@ -128,9 +128,10 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
     if (!window.confirm('Are you sure you want to delete this expense entry?')) return;
     try {
       await api.delete(`/trips/${tripId}/expenses/${expenseId}`);
+      toast.success('Expense deleted successfully');
       fetchTripDetails();
     } catch (err) {
-      alert(err.response?.data?.error?.message || 'Failed to delete expense.');
+      toast.error(err.response?.data?.error?.message || 'Failed to delete expense.');
     }
   };
 
@@ -149,13 +150,17 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
       });
 
       if (res.data?.success) {
-        setInviteSuccess(res.data.message || 'Member added successfully!');
+        const msg = res.data.message || 'Companion added successfully!';
+        setInviteSuccess(msg);
+        toast.success(msg);
         setInviteEmail('');
         fetchTripDetails();
-        setTimeout(() => setInviteModalOpen(false), 1500);
+        setTimeout(() => setInviteModalOpen(false), 1200);
       }
     } catch (err) {
-      setInviteError(err.response?.data?.error?.message || 'Failed to add companion.');
+      const msg = err.response?.data?.error?.message || 'Failed to add companion.';
+      setInviteError(msg);
+      toast.error(msg);
     } finally {
       setInviteLoading(false);
     }
@@ -165,19 +170,15 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
     if (!window.confirm('Are you sure you want to remove this companion from the trip?')) return;
     try {
       await api.delete(`/trips/${tripId}/members/${targetUserId}`);
+      toast.success('Companion removed from trip');
       fetchTripDetails();
     } catch (err) {
-      alert(err.response?.data?.error?.message || 'Failed to remove member.');
+      toast.error(err.response?.data?.error?.message || 'Failed to remove member.');
     }
   };
 
   if (loading) {
-    return (
-      <div className="py-20 text-center space-y-4">
-        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-sm font-medium text-slate-500">Loading trip financials and analytics...</p>
-      </div>
-    );
+    return <TripDetailSkeleton />;
   }
 
   if (error || !trip) {
@@ -514,7 +515,7 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
 
       {/* Secondary Nav Tabs: Expenses, Bookings, Companions */}
       <div className="space-y-4">
-        <div className="flex border-b border-slate-200 gap-6">
+        <div className="flex border-b border-slate-200 gap-6 overflow-x-auto whitespace-nowrap pb-0.5">
           <button
             onClick={() => setActiveSubTab('expenses')}
             className={`pb-3 text-sm font-bold transition-all relative ${
@@ -723,15 +724,24 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
                 })}
               </div>
             ) : (
-              <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-slate-200 space-y-3">
-                <Receipt className="w-10 h-10 text-slate-300 mx-auto" />
-                <h4 className="text-sm font-bold text-slate-700">No expenses found</h4>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  {searchQuery || categoryFilter !== 'ALL'
-                    ? 'Try adjusting your search or category filter.'
-                    : 'Tap "Log Expense" above to record spending for this trip.'}
-                </p>
-              </div>
+              <EmptyState
+                icon={Receipt}
+                badge={searchQuery || categoryFilter !== 'ALL' ? 'No Matches' : 'No Expenses'}
+                title={searchQuery || categoryFilter !== 'ALL' ? 'No matching expenses found' : 'No expenses recorded yet'}
+                description={
+                  searchQuery || categoryFilter !== 'ALL'
+                    ? 'Try clearing your search query or switching your category filter back to "All Categories".'
+                    : 'Track your spending on food, stay, rides, and activities with dual-currency conversions and group splits.'
+                }
+                action={{
+                  label: 'Log Expense',
+                  icon: Plus,
+                  onClick: () => {
+                    setEditingExpense(null);
+                    setExpenseModalOpen(true);
+                  },
+                }}
+              />
             )}
           </div>
         )}
@@ -790,13 +800,21 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
                 })}
               </div>
             ) : (
-              <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-slate-200 space-y-3">
-                <Hotel className="w-10 h-10 text-slate-300 mx-auto" />
-                <h4 className="text-sm font-bold text-slate-700">No bookings linked to this trip</h4>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  When you reserve hotels or transit, you can link them to this trip to auto-track against your budget.
-                </p>
-              </div>
+              <EmptyState
+                icon={Hotel}
+                badge="Pre-paid Bookings"
+                title="No bookings linked to this trip"
+                description="When you reserve verified hotels, flights, or trains, you can link them to this trip to automatically track reservations against your budget."
+                action={
+                  onNavigateToBookings
+                    ? {
+                        label: 'View Reservations',
+                        icon: Ticket,
+                        onClick: onNavigateToBookings,
+                      }
+                    : null
+                }
+              />
             )}
           </div>
         )}

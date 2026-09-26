@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { X, User, DollarSign, Sparkles, Check, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 export default function ProfileModal({ isOpen, onClose }) {
   const { user, updateProfile } = useAuth();
+  const toast = useToast();
 
   const [name, setName] = useState(user?.name || '');
   const [currencyPref, setCurrencyPref] = useState(user?.currency_pref || 'INR');
@@ -33,10 +35,14 @@ export default function ProfileModal({ isOpen, onClose }) {
         payload.password = password;
       }
       await updateProfile(payload);
-      setMessage('Profile preferences updated successfully.');
+      const successMsg = 'Profile preferences updated successfully.';
+      setMessage(successMsg);
+      toast.success(successMsg);
       setPassword('');
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to update preferences.');
+      const errMsg = err.response?.data?.error?.message || 'Failed to update preferences.';
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }

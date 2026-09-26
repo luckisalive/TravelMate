@@ -19,9 +19,12 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 import ActivityModal from './ActivityModal';
+import { ItinerarySkeleton } from '../common/Skeletons';
 
 export default function ItineraryView({ tripId }) {
+  const toast = useToast();
   const [itineraryData, setItineraryData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -29,7 +32,6 @@ export default function ItineraryView({ tripId }) {
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [error, setError] = useState('');
-  const [toastMessage, setToastMessage] = useState('');
 
   const fetchItinerary = async () => {
     try {
@@ -51,21 +53,18 @@ export default function ItineraryView({ tripId }) {
     }
   }, [tripId]);
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3000);
-  };
-
   const handleSyncBookings = async () => {
     try {
       setSyncing(true);
       const res = await api.post(`/trips/${tripId}/itinerary/sync-bookings`);
       if (res.data.success) {
-        showToast(res.data.message || 'Bookings auto-linked to itinerary!');
+        toast.success(res.data.message || 'Bookings auto-linked to itinerary!');
         fetchItinerary();
       }
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to sync bookings.');
+      const msg = err.response?.data?.error?.message || 'Failed to sync bookings.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSyncing(false);
     }
@@ -77,11 +76,11 @@ export default function ItineraryView({ tripId }) {
     try {
       const res = await api.delete(`/trips/${tripId}/itinerary/${itemId}`);
       if (res.data.success) {
-        showToast('Activity deleted.');
+        toast.success('Activity removed from itinerary');
         fetchItinerary();
       }
     } catch (err) {
-      alert(err.response?.data?.error?.message || 'Failed to delete activity.');
+      toast.error(err.response?.data?.error?.message || 'Failed to delete activity.');
     }
   };
 
@@ -105,16 +104,12 @@ export default function ItineraryView({ tripId }) {
       fetchItinerary();
     } catch (err) {
       console.error(err);
+      toast.error('Failed to reorder activity.');
     }
   };
 
   if (loading) {
-    return (
-      <div className="py-16 text-center text-slate-500 flex flex-col items-center justify-center gap-3">
-        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-        <p className="text-xs">Loading trip day-wise planner...</p>
-      </div>
-    );
+    return <ItinerarySkeleton />;
   }
 
   const items = itineraryData?.items || [];
@@ -153,13 +148,6 @@ export default function ItineraryView({ tripId }) {
 
   return (
     <div className="space-y-6">
-      {/* Toast alert */}
-      {toastMessage && (
-        <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-2xl flex items-center gap-2 shadow-xs animate-in fade-in">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
 
       {error && (
         <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-2xl flex items-center gap-2">

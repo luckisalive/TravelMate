@@ -17,10 +17,14 @@ import {
 import api from '../../services/api';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import TripModal from './TripModal';
+import { TripsGridSkeleton } from '../common/Skeletons';
+import EmptyState from '../common/EmptyState';
 
 export default function TripsListView({ onSelectTrip, onExploreBookings }) {
   const { user } = useAuth();
+  const toast = useToast();
   const { formatPrice } = useCurrency();
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,9 +57,10 @@ export default function TripsListView({ onSelectTrip, onExploreBookings }) {
     if (!window.confirm('Are you sure you want to delete this trip and its logged expenses?')) return;
     try {
       await api.delete(`/trips/${tripId}`);
+      toast.success('Trip deleted successfully');
       fetchTrips();
     } catch (err) {
-      alert(err.response?.data?.error?.message || 'Failed to delete trip.');
+      toast.error(err.response?.data?.error?.message || 'Failed to delete trip.');
     }
   };
 
@@ -95,10 +100,7 @@ export default function TripsListView({ onSelectTrip, onExploreBookings }) {
       </div>
 
       {loading ? (
-        <div className="py-20 text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm font-medium text-slate-500">Loading your trips...</p>
-        </div>
+        <TripsGridSkeleton count={6} />
       ) : error ? (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center text-xs text-red-700">
           {error}
@@ -223,26 +225,20 @@ export default function TripsListView({ onSelectTrip, onExploreBookings }) {
           })}
         </div>
       ) : (
-        /* Empty State */
-        <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-slate-200 max-w-xl mx-auto space-y-4">
-          <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto shadow-xs">
-            <Wallet className="w-8 h-8" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900">No Trips Created Yet</h3>
-          <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
-            Create your first trip to start setting budgets, logging food and transit expenses with server-side currency conversions, and visualizing analytics.
-          </p>
-          <button
-            onClick={() => {
+        <EmptyState
+          icon={Wallet}
+          badge="No Trips Found"
+          title="No Trips Created Yet"
+          description="Create your first trip to start setting budgets, logging food and transit expenses with server-side currency conversions, and visualizing analytics."
+          action={{
+            label: 'Create First Trip',
+            icon: Plus,
+            onClick: () => {
               setEditingTrip(null);
               setCreateModalOpen(true);
-            }}
-            className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-md transition-all inline-flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create First Trip</span>
-          </button>
-        </div>
+            },
+          }}
+        />
       )}
 
       {/* Modal */}

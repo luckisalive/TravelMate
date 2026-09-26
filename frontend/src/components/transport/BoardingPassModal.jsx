@@ -16,8 +16,10 @@ import {
   Armchair
 } from 'lucide-react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 
 export default function BoardingPassModal({ isOpen, onClose, booking, onCancellationSuccess }) {
+  const toast = useToast();
   const [cancelling, setCancelling] = useState(false);
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -41,6 +43,7 @@ export default function BoardingPassModal({ isOpen, onClose, booking, onCancella
     try {
       const res = await api.patch(`/bookings/${booking.id}/cancel`);
       if (res.data?.success) {
+        toast.success(`Reservation ${booking.reference_code} cancelled successfully.`);
         if (onCancellationSuccess) {
           onCancellationSuccess(booking.id);
         }
@@ -49,7 +52,9 @@ export default function BoardingPassModal({ isOpen, onClose, booking, onCancella
       }
     } catch (err) {
       console.error('Cancel booking error:', err);
-      setErrorMsg(err.response?.data?.error?.message || 'Failed to cancel reservation.');
+      const errMsg = err.response?.data?.error?.message || 'Failed to cancel reservation.';
+      setErrorMsg(errMsg);
+      toast.error(errMsg);
     } finally {
       setCancelling(false);
     }

@@ -15,9 +15,11 @@ import {
 import api from '../../services/api';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 export default function TrainBusBookingModal({ isOpen, onClose, transport, onBookingSuccess, onOpenAuth }) {
   const { user } = useAuth();
+  const toast = useToast();
   const { displayCurrency, formatPrice } = useCurrency();
 
   const [passengerName, setPassengerName] = useState(user?.name || '');
@@ -67,6 +69,7 @@ export default function TrainBusBookingModal({ isOpen, onClose, transport, onBoo
       const res = await api.post('/bookings/transport', payload);
 
       if (res.data?.success) {
+        toast.success(`${isTrain ? 'Train ticket' : 'Bus ticket'} reserved! PNR #${res.data.data.booking.reference_code}`);
         onBookingSuccess(res.data.data);
         onClose();
       }

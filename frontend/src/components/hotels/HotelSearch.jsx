@@ -16,6 +16,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 import HotelCard from './HotelCard';
 import HotelDetailModal from './HotelDetailModal';
 import MyBookingsView from './MyBookingsView';
+import EmptyState from '../common/EmptyState';
 
 export default function HotelSearch({ onOpenAuth }) {
   const { user } = useAuth();
@@ -396,24 +397,18 @@ export default function HotelSearch({ onOpenAuth }) {
               ))}
             </div>
           ) : hotels.length === 0 ? (
-            /* No Results Found */
-            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm space-y-4 max-w-md mx-auto">
-              <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
-                <Building2 className="w-8 h-8" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-800">No Stays Found</h3>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  No hotels match your current search filters. Try adjusting price bounds or selecting another destination.
-                </p>
-              </div>
-              <button
-                onClick={handleResetFilters}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow-md transition-colors"
-              >
-                Reset All Filters
-              </button>
-            </div>
+            <EmptyState
+              icon={Building2}
+              iconBg="bg-amber-50 text-amber-600"
+              badge="No Stays Found"
+              title="No Hotels Match Your Filters"
+              description="No properties match your current destination or filter parameters. Try adjusting price bounds, minimum star ratings, or resetting filters."
+              action={{
+                label: 'Reset All Filters',
+                icon: RotateCcw,
+                onClick: handleResetFilters,
+              }}
+            />
           ) : (
             /* Hotel Cards Grid */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

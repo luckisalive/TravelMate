@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { X, Lock, Mail, User, Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
+  const toast = useToast();
   const [mode, setMode] = useState(initialMode);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -24,6 +26,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
     try {
       if (mode === 'login') {
         await login(email, password);
+        toast.success('Welcome back to TravelMate!');
       } else {
         await register({
           name,
@@ -32,11 +35,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
           currency_pref: currencyPref,
           travel_style: travelStyle,
         });
+        toast.success('Account created! Welcome to TravelMate.');
       }
       onClose();
     } catch (err) {
       const msg = err.response?.data?.error?.message || err.message || 'Authentication failed.';
       setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
