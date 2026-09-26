@@ -9,6 +9,7 @@ const hotelRoutes = require('./routes/hotelRoutes');
 const tripRoutes = require('./routes/tripRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const transportRoutes = require('./routes/transportRoutes');
+const { startRateSyncCron } = require('./services/rateSyncService');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -41,11 +42,12 @@ app.use('/api/transport', transportRoutes);
 // Global Error Handler
 app.use(errorHandler);
 
-// Start Server (only if not imported by test suite)
+// Start Server & Background Services (only if not imported by test suite)
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     console.log(`TravelMate API server running on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/api/health`);
+    startRateSyncCron();
   });
 }
 

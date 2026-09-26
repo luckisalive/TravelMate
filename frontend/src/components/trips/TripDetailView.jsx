@@ -1,0 +1,907 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  ArrowLeft, 
+  Wallet, 
+  TrendingUp, 
+  AlertTriangle, 
+  CheckCircle2, 
+  Plus, 
+  Calendar, 
+  Edit3, 
+  Trash2, 
+  Users, 
+  Search, 
+  Filter, 
+  Receipt, 
+  Utensils, 
+  Car, 
+  Hotel, 
+  Compass, 
+  ShoppingBag, 
+  MoreHorizontal, 
+  Sparkles,
+  PieChart as PieIcon,
+  BarChart3,
+  UserPlus,
+  Building2,
+  Plane,
+  X,
+  UserCheck
+} from 'lucide-react';
+import { 
+  PieChart, 
+  Pie, 
+  Cell, 
+  ResponsiveContainer, 
+  Tooltip as RechartsTooltip, 
+  Legend, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid 
+} from 'recharts';
+import api from '../../services/api';
+import { useCurrency } from '../../context/CurrencyContext';
+import { useAuth } from '../../context/AuthContext';
+import ExpenseModal from './ExpenseModal';
+import TripModal from './TripModal';
+
+const CATEGORY_COLORS = {
+  Food: '#F59E0B',       // Amber
+  Transport: '#0EA5E9',  // Sky
+  Stay: '#8B5CF6',       // Purple
+  Activity: '#10B981',   // Emerald
+  Shopping: '#EC4899',   // Pink
+  Other: '#64748B',      // Slate
+};
+
+const CATEGORY_ICONS = {
+  Food: Utensils,
+  Transport: Car,
+  Stay: Hotel,
+  Activity: Compass,
+  Shopping: ShoppingBag,
+  Other: MoreHorizontal,
+};
+
+export default function TripDetailView({ tripId, onBack, onNavigateToBookings }) {
+  const { user } = useAuth();
+  const { formatPrice, displayCurrency } = useCurrency();
+
+  const [trip, setTrip] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [activeSubTab, setActiveSubTab] = useState('expenses'); // 'expenses' | 'bookings' | 'members'
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Modals state
+  const [expenseModalOpen, setExpenseModalOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [editTripModalOpen, setEditTripModalOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteSuccess, setInviteSuccess] = useState(null);
+  const [inviteError, setInviteError] = useState(null);
+
+  const fetchTripDetails = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [tripRes, analyticsRes] = await Promise.all([
+        api.get(`/trips/${tripId}`),
+        api.get(`/trips/${tripId}/expenses/analytics`),
+      ]);
+
+      if (tripRes.data?.success) {
+        setTrip(tripRes.data.data);
+      }
+      if (analyticsRes.data?.success) {
+        setAnalytics(analyticsRes.data.data);
+      }
+    } catch (err) {
+      setError(err.response?.data?.error?.message || err.message || 'Failed to load trip details.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (tripId) {
+      fetchTripDetails();
+    }
+  }, [tripId]);
+
+  const handleDeleteExpense = async (expenseId) => {
+    if (!window.confirm('Are you sure you want to delete this expense entry?')) return;
+    try {
+      await api.delete(`/trips/${tripId}/expenses/${expenseId}`);
+      fetchTripDetails();
+    } catch (err) {
+      alert(err.response?.data?.error?.message || 'Failed to delete expense.');
+    }
+  };
+
+  const handleInviteMember = async (e) => {
+    e.preventDefault();
+    if (!inviteEmail.trim()) return;
+
+    try {
+      setInviteLoading(true);
+      setInviteError(null);
+      setInviteSuccess(null);
+
+      const res = await api.post(`/trips/${tripId}/members`, {
+        email: inviteEmail.trim(),
+        role: 'member',
+      });
+
+      if (res.data?.success) {
+        setInviteSuccess(res.data.message || 'Member added successfully!');
+        setInviteEmail('');
+        fetchTripDetails();
+        setTimeout(() => setInviteModalOpen(false), 1500);
+      }
+    } catch (err) {
+      setInviteError(err.response?.data?.error?.message || 'Failed to add companion.');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const handleRemoveMember = async (targetUserId) => {
+    if (!window.confirm('Are you sure you want to remove this companion from the trip?')) return;
+    try {
+      await api.delete(`/trips/${tripId}/members/${targetUserId}`);
+      fetchTripDetails();
+    } catch (err) {
+      alert(err.response?.data?.error?.message || 'Failed to remove member.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="py-20 text-center space-y-4">
+        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-sm font-medium text-slate-500">Loading trip financials and analytics...</p>
+      </div>
+    );
+  }
+
+  if (error || !trip) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center space-y-4">
+        <p className="text-sm font-semibold text-red-700">{error || 'Trip not found.'}</p>
+        <button
+          onClick={onBack}
+          className="px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors inline-flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Trips</span>
+        </button>
+      </div>
+    );
+  }
+
+  // Filtered expenses
+  const filteredExpenses = (trip.expenses || []).filter((exp) => {
+    const matchesCategory = categoryFilter === 'ALL' || exp.category.toUpperCase() === categoryFilter.toUpperCase();
+    const matchesSearch = !searchQuery.trim() || 
+      (exp.note && exp.note.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      exp.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (exp.paid_by_name && exp.paid_by_name.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesCategory && matchesSearch;
+  });
+
+  const isOwner = trip.created_by === user?.id || trip.user_role === 'owner';
+
+  // Budget calculations
+  const budget = trip.summary?.total_budget || 0;
+  const totalSpentBase = trip.summary?.total_spent_base || 0;
+  const remainingBudgetBase = trip.summary?.remaining_budget !== undefined ? trip.summary.remaining_budget : (budget - totalSpentBase);
+  const utilizationPct = trip.summary?.budget_utilization_pct || 0;
+  const isOverBudget = trip.summary?.is_over_budget;
+
+  // Prepare Recharts Donut data
+  const pieData = (analytics?.categories || []).map((cat) => ({
+    name: cat.category,
+    value: cat.amount_base,
+    percentage: cat.percentage,
+    count: cat.count,
+    color: CATEGORY_COLORS[cat.category] || '#64748B',
+  }));
+
+  // Daily trend data
+  const trendData = (analytics?.daily_trend || []).map((item) => ({
+    date: item.date.slice(5), // 'MM-DD'
+    amount: item.amount_base,
+  }));
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-300">
+      {/* Top Navigation & Trip Header */}
+      <div className="space-y-4">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors group cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span>Back to All Trips</span>
+        </button>
+
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 uppercase tracking-wider">
+                {trip.user_role === 'owner' ? 'Trip Owner' : 'Companion Member'}
+              </span>
+              <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
+                isOverBudget
+                  ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                  : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+              }`}>
+                {isOverBudget ? 'Over Budget' : 'On Track'}
+              </span>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              {trip.name}
+            </h1>
+
+            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 font-medium">
+              <span className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                {trip.start_date.split('T')[0]} to {trip.end_date.split('T')[0]}
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-slate-400" />
+                {trip.members?.length || 1} {trip.members?.length === 1 ? 'traveler' : 'travelers'}
+              </span>
+              <span>•</span>
+              <span>Trip Base: {trip.base_currency}</span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <button
+              onClick={() => {
+                setEditingExpense(null);
+                setExpenseModalOpen(true);
+              }}
+              className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-md shadow-indigo-200 flex items-center gap-2 transition-all hover:shadow-lg cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Log Expense</span>
+            </button>
+
+            {isOwner && (
+              <>
+                <button
+                  onClick={() => setInviteModalOpen(true)}
+                  className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs shadow-2xs flex items-center gap-2 transition-colors cursor-pointer"
+                >
+                  <UserPlus className="w-4 h-4 text-indigo-600" />
+                  <span>Add Companion</span>
+                </button>
+
+                <button
+                  onClick={() => setEditTripModalOpen(true)}
+                  className="p-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 hover:text-slate-900 shadow-2xs transition-colors cursor-pointer"
+                  title="Edit Trip Settings"
+                >
+                  <Edit3 className="w-4 h-4" />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Financial Metrics Cards (Dual-Currency Display) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Budget */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              Total Budget
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <Wallet className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-slate-900">
+            {formatPrice(budget).formatted}
+          </div>
+          <p className="text-[11px] text-slate-500 font-mono">
+            {formatPrice(budget).fullDisplay}
+          </p>
+        </div>
+
+        {/* Card 2: Total Spent */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              Total Spent
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-slate-900">
+            {formatPrice(totalSpentBase).formatted}
+          </div>
+          <p className="text-[11px] text-slate-500 font-mono">
+            {formatPrice(totalSpentBase).fullDisplay}
+          </p>
+        </div>
+
+        {/* Card 3: Remaining */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              {remainingBudgetBase >= 0 ? 'Remaining Budget' : 'Deficit / Over Budget'}
+            </span>
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+              remainingBudgetBase >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+            }`}>
+              {remainingBudgetBase >= 0 ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+            </div>
+          </div>
+          <div className={`text-xl sm:text-2xl font-black ${
+            remainingBudgetBase >= 0 ? 'text-emerald-600' : 'text-rose-600'
+          }`}>
+            {formatPrice(Math.abs(remainingBudgetBase)).formatted}
+          </div>
+          <p className="text-[11px] text-slate-500 font-mono">
+            {remainingBudgetBase >= 0 ? 'Available for spending' : 'Exceeded allocated budget'}
+          </p>
+        </div>
+
+        {/* Card 4: Utilization */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              Budget Utilization
+            </span>
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+              utilizationPct > 100
+                ? 'bg-rose-100 text-rose-800'
+                : utilizationPct > 80
+                ? 'bg-amber-100 text-amber-800'
+                : 'bg-emerald-100 text-emerald-800'
+            }`}>
+              {utilizationPct}%
+            </span>
+          </div>
+          <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                utilizationPct > 100
+                  ? 'bg-rose-600'
+                  : utilizationPct > 80
+                  ? 'bg-amber-500'
+                  : 'bg-indigo-600'
+              }`}
+              style={{ width: `${Math.min(100, utilizationPct)}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+            <span>Expenses: {formatPrice(trip.summary?.total_expenses_base || 0).formatted}</span>
+            <span>Bookings: {formatPrice(trip.summary?.total_bookings_base || 0).formatted}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Visual Analytics Charts Section (Recharts) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Chart 1: Donut Category Breakdown */}
+        <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <PieIcon className="w-4 h-4 text-indigo-600" />
+                <span>Spending by Category</span>
+              </h3>
+              <p className="text-[11px] text-slate-500">Breakdown of on-trip logged expenses</p>
+            </div>
+            <span className="text-[11px] font-mono text-slate-400">
+              {pieData.length} categories
+            </span>
+          </div>
+
+          {pieData.length > 0 ? (
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={75}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip
+                    formatter={(value, name) => [
+                      formatPrice(value).formatted,
+                      name,
+                    ]}
+                  />
+                  <Legend 
+                    layout="horizontal" 
+                    verticalAlign="bottom" 
+                    align="center"
+                    iconType="circle"
+                    wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="h-64 flex flex-col items-center justify-center text-slate-400 space-y-2 border border-dashed border-slate-200 rounded-2xl">
+              <Receipt className="w-8 h-8 stroke-1" />
+              <p className="text-xs">No expenses recorded yet</p>
+            </div>
+          )}
+        </div>
+
+        {/* Chart 2: Daily Spending Trend */}
+        <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-sky-600" />
+                <span>Daily Spending Timeline</span>
+              </h3>
+              <p className="text-[11px] text-slate-500">Expenditure tracking across trip duration</p>
+            </div>
+            <span className="text-[11px] font-mono text-slate-400">
+              Base Currency: {displayCurrency}
+            </span>
+          </div>
+
+          {trendData.length > 0 ? (
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#64748B' }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#64748B' }} />
+                  <RechartsTooltip
+                    formatter={(val) => [formatPrice(val).formatted, 'Spent']}
+                    labelFormatter={(label) => `Date: ${label}`}
+                  />
+                  <Bar dataKey="amount" fill="#6366F1" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="h-64 flex flex-col items-center justify-center text-slate-400 space-y-2 border border-dashed border-slate-200 rounded-2xl">
+              <Calendar className="w-8 h-8 stroke-1" />
+              <p className="text-xs">Daily timeline will render as expenses are logged</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Secondary Nav Tabs: Expenses, Bookings, Companions */}
+      <div className="space-y-4">
+        <div className="flex border-b border-slate-200 gap-6">
+          <button
+            onClick={() => setActiveSubTab('expenses')}
+            className={`pb-3 text-sm font-bold transition-all relative ${
+              activeSubTab === 'expenses'
+                ? 'text-indigo-600 border-b-2 border-indigo-600'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span>Logged Expenses</span>
+            <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+              {trip.expenses?.length || 0}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('bookings')}
+            className={`pb-3 text-sm font-bold transition-all relative ${
+              activeSubTab === 'bookings'
+                ? 'text-indigo-600 border-b-2 border-indigo-600'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span>Trip Bookings</span>
+            <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+              {trip.bookings?.length || 0}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('members')}
+            className={`pb-3 text-sm font-bold transition-all relative ${
+              activeSubTab === 'members'
+                ? 'text-indigo-600 border-b-2 border-indigo-600'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span>Companions</span>
+            <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+              {trip.members?.length || 1}
+            </span>
+          </button>
+        </div>
+
+        {/* SUBTAB 1: EXPENSES */}
+        {activeSubTab === 'expenses' && (
+          <div className="space-y-4">
+            {/* Filter Bar */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+              {/* Category Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+                {['ALL', 'Food', 'Transport', 'Stay', 'Activity', 'Shopping', 'Other'].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setCategoryFilter(cat)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+                      categoryFilter === cat
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Search input */}
+              <div className="relative min-w-[220px]">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search notes or payers..."
+                  className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                />
+              </div>
+            </div>
+
+            {/* Expenses List */}
+            {filteredExpenses.length > 0 ? (
+              <div className="grid grid-cols-1 gap-3">
+                {filteredExpenses.map((exp) => {
+                  const IconComp = CATEGORY_ICONS[exp.category] || MoreHorizontal;
+                  const catColor = CATEGORY_COLORS[exp.category] || '#64748B';
+                  const canEdit = isOwner || exp.paid_by === user?.id;
+
+                  return (
+                    <div
+                      key={exp.id}
+                      className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    >
+                      <div className="flex items-start gap-3.5">
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs"
+                          style={{ backgroundColor: `${catColor}15`, color: catColor }}
+                        >
+                          <IconComp className="w-5 h-5" />
+                        </div>
+
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span 
+                              className="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider"
+                              style={{ backgroundColor: `${catColor}20`, color: catColor }}
+                            >
+                              {exp.category}
+                            </span>
+                            <span className="text-xs text-slate-400 font-mono">
+                              {exp.date}
+                            </span>
+                          </div>
+                          <h4 className="text-sm font-bold text-slate-800">
+                            {exp.note || `${exp.category} expense`}
+                          </h4>
+                          <p className="text-xs text-slate-500 flex items-center gap-1.5">
+                            <span>Paid by:</span>
+                            <span className="font-semibold text-slate-700">
+                              {exp.paid_by === user?.id ? 'You' : exp.paid_by_name}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Amounts & Actions */}
+                      <div className="flex items-center justify-between sm:justify-end gap-5 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100">
+                        <div className="text-right">
+                          <div className="text-base sm:text-lg font-black text-slate-900">
+                            {exp.currency} {exp.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </div>
+                          {exp.currency !== 'INR' && (
+                            <div className="text-[11px] text-slate-400 font-mono">
+                              ≈ {formatPrice(exp.amount_base).formatted}
+                            </div>
+                          )}
+                        </div>
+
+                        {canEdit && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                setEditingExpense(exp);
+                                setExpenseModalOpen(true);
+                              }}
+                              className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                              title="Edit expense"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteExpense(exp.id)}
+                              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                              title="Delete expense"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-slate-200 space-y-3">
+                <Receipt className="w-10 h-10 text-slate-300 mx-auto" />
+                <h4 className="text-sm font-bold text-slate-700">No expenses found</h4>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  {searchQuery || categoryFilter !== 'ALL'
+                    ? 'Try adjusting your search or category filter.'
+                    : 'Tap "Log Expense" above to record spending for this trip.'}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* SUBTAB 2: BOOKINGS */}
+        {activeSubTab === 'bookings' && (
+          <div className="space-y-3">
+            {trip.bookings && trip.bookings.length > 0 ? (
+              <div className="grid grid-cols-1 gap-3">
+                {trip.bookings.map((booking) => {
+                  const isHotel = booking.hotel_id !== null;
+                  return (
+                    <div
+                      key={booking.id}
+                      className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    >
+                      <div className="flex items-start gap-3.5">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                          isHotel ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'
+                        }`}>
+                          {isHotel ? <Building2 className="w-5 h-5" /> : <Plane className="w-5 h-5" />}
+                        </div>
+
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 uppercase">
+                              {isHotel ? 'Hotel Stay' : booking.transport_mode?.toUpperCase()}
+                            </span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                              booking.status === 'confirmed' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {booking.status}
+                            </span>
+                          </div>
+                          <h4 className="text-sm font-bold text-slate-900">
+                            {isHotel ? booking.hotel_name : `${booking.transport_operator} (${booking.transport_number})`}
+                          </h4>
+                          <p className="text-xs text-slate-500">
+                            {isHotel
+                              ? `${booking.hotel_city} • Check-in: ${booking.check_in} to ${booking.check_out}`
+                              : `${booking.transport_origin} → ${booking.transport_destination} ${booking.seat_no ? `• Seat ${booking.seat_no}` : ''}`}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="text-base font-black text-slate-900">
+                          {formatPrice(booking.amount_base).formatted}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-mono">
+                          Pre-paid Booking
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-slate-200 space-y-3">
+                <Hotel className="w-10 h-10 text-slate-300 mx-auto" />
+                <h4 className="text-sm font-bold text-slate-700">No bookings linked to this trip</h4>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  When you reserve hotels or transit, you can link them to this trip to auto-track against your budget.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* SUBTAB 3: COMPANIONS */}
+        {activeSubTab === 'members' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Trip Companions</h3>
+                <p className="text-xs text-slate-500">Travel buddies who can log and split trip expenses</p>
+              </div>
+              {isOwner && (
+                <button
+                  onClick={() => setInviteModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>Invite Companion</span>
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {(trip.members || []).map((m) => (
+                <div
+                  key={m.user_id}
+                  className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">
+                      {m.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <span>{m.name}</span>
+                        {m.user_id === user?.id && (
+                          <span className="text-[10px] text-slate-400 font-normal">(You)</span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-slate-400 truncate max-w-[150px]">
+                        {m.email}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      m.role === 'owner' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {m.role}
+                    </span>
+
+                    {isOwner && m.user_id !== trip.created_by && (
+                      <button
+                        onClick={() => handleRemoveMember(m.user_id)}
+                        className="text-slate-400 hover:text-red-600 p-1 rounded-lg transition-colors cursor-pointer"
+                        title="Remove member"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* MODALS */}
+      {expenseModalOpen && (
+        <ExpenseModal
+          isOpen={expenseModalOpen}
+          onClose={() => {
+            setExpenseModalOpen(false);
+            setEditingExpense(null);
+          }}
+          onSaved={() => fetchTripDetails()}
+          tripId={tripId}
+          members={trip.members || []}
+          initialExpense={editingExpense}
+        />
+      )}
+
+      {editTripModalOpen && (
+        <TripModal
+          isOpen={editTripModalOpen}
+          onClose={() => setEditTripModalOpen(false)}
+          onSaved={() => fetchTripDetails()}
+          initialTrip={trip}
+        />
+      )}
+
+      {/* Invite Companion Modal */}
+      {inviteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 relative animate-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setInviteModalOpen(false)}
+              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <UserPlus className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Add Trip Companion</h3>
+                <p className="text-xs text-slate-500">Invite a travel companion by email</p>
+              </div>
+            </div>
+
+            {inviteSuccess && (
+              <div className="mb-4 p-3 rounded-xl bg-emerald-50 text-emerald-800 text-xs flex items-center gap-2">
+                <UserCheck className="w-4 h-4 shrink-0" />
+                <span>{inviteSuccess}</span>
+              </div>
+            )}
+
+            {inviteError && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-50 text-rose-800 text-xs">
+                {inviteError}
+              </div>
+            )}
+
+            <form onSubmit={handleInviteMember} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Companion Email Address
+                </label>
+                <input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="companion@example.com"
+                  required
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Companion must already have a registered TravelMate account.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setInviteModalOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={inviteLoading}
+                  className="px-5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs disabled:opacity-50"
+                >
+                  {inviteLoading ? 'Adding...' : 'Add Companion'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

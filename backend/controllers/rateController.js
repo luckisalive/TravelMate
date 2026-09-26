@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const db = require('../config/db');
+const { syncExchangeRates } = require('../services/rateSyncService');
 
 // GET /api/rates - Fetch latest cached exchange rates
 async function getLatestRates(req, res, next) {
@@ -58,6 +59,28 @@ async function getLatestRates(req, res, next) {
   }
 }
 
+// POST /api/rates/sync - Trigger rate synchronization
+async function syncRates(req, res, next) {
+  try {
+    const result = await syncExchangeRates();
+    if (!result.success) {
+      return res.status(502).json({
+        success: false,
+        error: { message: result.error || 'Failed to sync rates from external service' },
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: result,
+      message: 'Exchange rates successfully synchronized.',
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getLatestRates,
+  syncRates,
 };
