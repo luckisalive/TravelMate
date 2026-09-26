@@ -1,0 +1,299 @@
+[
+  {
+    "code": "BOM",
+    "name": "Chhatrapati Shivaji Maharaj International Airport",
+    "city": "Mumbai",
+    "country": "India",
+    "type": "airport",
+    "lat": 19.089600,
+    "lon": 72.865600
+  },
+  {
+    "code": "DEL",
+    "name": "Indira Gandhi International Airport",
+    "city": "Delhi",
+    "country": "India",
+    "type": "airport",
+    "lat": 28.556200,
+    "lon": 77.100000
+  },
+  {
+    "code": "BLR",
+    "name": "Kempegowda International Airport",
+    "city": "Bengaluru",
+    "country": "India",
+    "type": "airport",
+    "lat": 13.198600,
+    "lon": 77.706600
+  },
+  {
+    "code": "GOI",
+    "name": "Dabolim International Airport",
+    "city": "Goa",
+    "country": "India",
+    "type": "airport",
+    "lat": 15.380800,
+    "lon": 73.831400
+  },
+  {
+    "code": "GOX",
+    "name": "Manohar International Airport (Mopa)",
+    "city": "Goa",
+    "country": "India",
+    "type": "airport",
+    "lat": 15.766700,
+    "lon": 73.866700
+  },
+  {
+    "code": "JAI",
+    "name": "Jaipur International Airport",
+    "city": "Jaipur",
+    "country": "India",
+    "type": "airport",
+    "lat": 26.824200,
+    "lon": 75.812200
+  },
+  {
+    "code": "PNQ",
+    "name": "Pune International Airport",
+    "city": "Pune",
+    "country": "India",
+    "type": "airport",
+    "lat": 18.582200,
+    "lon": 73.919700
+  },
+  {
+    "code": "AMD",
+    "name": "Sardar Vallabhbhai Patel International Airport",
+    "city": "Ahmedabad",
+    "country": "India",
+    "type": "airport",
+    "lat": 23.077200,
+    "lon": 72.634700
+  },
+  {
+    "code": "HYD",
+    "name": "Rajiv Gandhi International Airport",
+    "city": "Hyderabad",
+    "country": "India",
+    "type": "airport",
+    "lat": 17.240300,
+    "lon": 78.429400
+  },
+  {
+    "code": "CCU",
+    "name": "Netaji Subhash Chandra Bose International Airport",
+    "city": "Kolkata",
+    "country": "India",
+    "type": "airport",
+    "lat": 22.654700,
+    "lon": 88.446700
+  },
+  {
+    "code": "MAA",
+    "name": "Chennai International Airport",
+    "city": "Chennai",
+    "country": "India",
+    "type": "airport",
+    "lat": 12.994100,
+    "lon": 80.170900
+  },
+  {
+    "code": "COK",
+    "name": "Cochin International Airport",
+    "city": "Kochi",
+    "country": "India",
+    "type": "airport",
+    "lat": 10.152000,
+    "lon": 76.401900
+  },
+  {
+    "code": "CSTM",
+    "name": "Chhatrapati Shivaji Maharaj Terminus",
+    "city": "Mumbai",
+    "country": "India",
+    "type": "rail",
+    "lat": 18.940100,
+    "lon": 72.835400
+  },
+  {
+    "code": "BCT",
+    "name": "Mumbai Central Railway Station",
+    "city": "Mumbai",
+    "country": "India",
+    "type": "rail",
+    "lat": 18.969600,
+    "lon": 72.819300
+  },
+  {
+    "code": "NDLS",
+    "name": "New Delhi Railway Station",
+    "city": "Delhi",
+    "country": "India",
+    "type": "rail",
+    "lat": 28.642900,
+    "lon": 77.219500
+  },
+  {
+    "code": "NZM",
+    "name": "Hazrat Nizamuddin Railway Station",
+    "city": "Delhi",
+    "country": "India",
+    "type": "rail",
+    "lat": 28.588900,
+    "lon": 77.253600
+  },
+  {
+    "code": "SBC",
+    "name": "KSR Bengaluru City Railway Station",
+    "city": "Bengaluru",
+    "country": "India",
+    "type": "rail",
+    "lat": 12.978100,
+    "lon": 77.569400
+  },
+  {
+    "code": "YPR",
+    "name": "Yesvantpur Junction",
+    "city": "Bengaluru",
+    "country": "India",
+    "type": "rail",
+    "lat": 13.023800,
+    "lon": 77.550300
+  },
+  {
+    "code": "MAO",
+    "name": "Madgaon Junction Railway Station",
+    "city": "Goa",
+    "country": "India",
+    "type": "rail",
+    "lat": 15.273600,
+    "lon": 73.978100
+  },
+  {
+    "code": "KRMI",
+    "name": "Karmali Railway Station",
+    "city": "Goa",
+    "country": "India",
+    "type": "rail",
+    "lat": 15.488300,
+    "lon": 73.921400
+  },
+  {
+    "code": "JP",
+    "name": "Jaipur Junction",
+    "city": "Jaipur",
+    "country": "India",
+    "type": "rail",
+    "lat": 26.919600,
+    "lon": 75.787800
+  },
+  {
+    "code": "PUNE",
+    "name": "Pune Junction Railway Station",
+    "city": "Pune",
+    "country": "India",
+    "type": "rail",
+    "lat": 18.528400,
+    "lon": 73.874400
+  },
+  {
+    "code": "ADI",
+    "name": "Ahmedabad Junction",
+    "city": "Ahmedabad",
+    "country": "India",
+    "type": "rail",
+    "lat": 23.023200,
+    "lon": 72.600600
+  },
+  {
+    "code": "HYB",
+    "name": "Hyderabad Deccan Nampally",
+    "city": "Hyderabad",
+    "country": "India",
+    "type": "rail",
+    "lat": 17.392400,
+    "lon": 78.469700
+  },
+  {
+    "code": "HWH",
+    "name": "Howrah Junction",
+    "city": "Kolkata",
+    "country": "India",
+    "type": "rail",
+    "lat": 22.583900,
+    "lon": 88.342600
+  },
+  {
+    "code": "MAS",
+    "name": "MGR Chennai Central",
+    "city": "Chennai",
+    "country": "India",
+    "type": "rail",
+    "lat": 13.082700,
+    "lon": 80.275500
+  },
+  {
+    "code": "BOM-BUS",
+    "name": "Mumbai Central Intercity Bus Terminal",
+    "city": "Mumbai",
+    "country": "India",
+    "type": "bus",
+    "lat": 18.969000,
+    "lon": 72.820500
+  },
+  {
+    "code": "DEL-BUS",
+    "name": "Maharana Pratap ISBT Kashmere Gate",
+    "city": "Delhi",
+    "country": "India",
+    "type": "bus",
+    "lat": 28.667500,
+    "lon": 77.228900
+  },
+  {
+    "code": "BLR-BUS",
+    "name": "Kempegowda Majestic Bus Terminal",
+    "city": "Bengaluru",
+    "country": "India",
+    "type": "bus",
+    "lat": 12.977200,
+    "lon": 77.571300
+  },
+  {
+    "code": "GOA-BUS",
+    "name": "Kadamba Intercity Bus Stand, Panaji",
+    "city": "Goa",
+    "country": "India",
+    "type": "bus",
+    "lat": 15.498900,
+    "lon": 73.832200
+  },
+  {
+    "code": "JAI-BUS",
+    "name": "Sindhi Camp Central Bus Terminal",
+    "city": "Jaipur",
+    "country": "India",
+    "type": "bus",
+    "lat": 26.923900,
+    "lon": 75.798100
+  },
+  {
+    "code": "PUNE-BUS",
+    "name": "Swargate MSRTC Intercity Terminal",
+    "city": "Pune",
+    "country": "India",
+    "type": "bus",
+    "lat": 18.501800,
+    "lon": 73.858700
+  },
+  {
+    "code": "AMD-BUS",
+    "name": "Geeta Mandir Central Bus Terminal",
+    "city": "Ahmedabad",
+    "country": "India",
+    "type": "bus",
+    "lat": 23.013500,
+    "lon": 72.589200
+  }
+]

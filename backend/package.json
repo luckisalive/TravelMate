@@ -8,7 +8,9 @@
     "dev": "node --watch server.js",
     "db:migrate": "node db/migrate.js",
     "db:seed": "node db/seeds/seed.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/test_auth.js && node tests/test_seed.js",
+    "test:auth": "node tests/test_auth.js",
+    "test:seed": "node tests/test_seed.js"
   },
   "keywords": [],
   "author": "",
