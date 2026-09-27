@@ -325,19 +325,10 @@ Render free tier instances spin down after 15 minutes of inactivity, and Neon co
 
 ---
 
-## 🎓 Project Documentation & Academic Viva
-
-For academic examiners, evaluators, and system architects:
-- 📖 [**Full Project Engineering Report**](docs/PROJECT_REPORT.md) — Comprehensive Software Requirements Specification (SRS), system architecture, DFD Levels 0 & 1, ER Diagram, ACID concurrency models, and threat analysis.
-- 🎤 [**Viva Presentation Script & Defense Guide**](docs/VIVA_PRESENTATION_SCRIPT.md) — Timed 7-minute presentation walkthrough, demonstration persona workflows, examiner defense Q&A, and technical justifications.
-- 📋 [**Architectural Decision Records (ADRs)**](DECISIONS.md) — Log of 12 architectural decisions made throughout the project lifecycle.
-
----
 
 ## 📜 Attributions & License
 
 - **Geospatial & Accommodation Data:** © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) (ODbL).
 - **Exchange Rates:** [Frankfurter API](https://www.frankfurter.app/) (European Central Bank).
-- **Icons:** [Lucide React](https://lucide.dev/) (ISC License).
 
-This project is licensed under the [ISC License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
