@@ -77,6 +77,6 @@ npm run keepalive https://<your-app>.onrender.com
 ## 3. Pre-Viva Examination Checklist (T-Minus 10 Minutes)
 
 1. [ ] **Ping Backend:** Run `npm run keepalive <RENDER_URL>` 10 minutes prior to entering the exam room.
-2. [ ] **Verify Database:** Open the live Vercel URL in your browser and log in with your demo account (`alice@example.com` or demo credentials).
+2. [ ] **Verify Database:** Open the live Vercel URL in your browser and sign in or create an account.
 3. [ ] **Confirm Search Queries:** Run one quick hotel search (e.g. `Mumbai`) and transport search to ensure Neon database compute has resumed and cache tables are primed.
 4. [ ] **Inspect Console:** Open DevTools (F12) to verify no CORS errors or unexpected 401s occur.
