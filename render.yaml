@@ -8,6 +8,7 @@ services:
     startCommand: npm run start
     healthCheckPath: /api/health
     autoDeploy: true
+    autoDeployTrigger: commit 
     envVars:
       - key: NODE_ENV
         value: production

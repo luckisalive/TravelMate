@@ -47,8 +47,8 @@ Built from the ground up to operate reliably on zero-cost free cloud tiers (**Re
 | Service | Environment | URL |
 | :--- | :--- | :--- |
 | **Frontend Web App** | Vercel (Edge CDN) | [https://travel-mate-cyan-beta.vercel.app](https://travel-mate-cyan-beta.vercel.app) |
-| **Backend REST API** | Render (Web Service) | [https://travelmate-api.onrender.com/api](https://travelmate-api.onrender.com/api) |
-| **API Health & DB Probe** | Render | [https://travelmate-api.onrender.com/api/health](https://travelmate-api.onrender.com/api/health) |
+| **Backend REST API** | Render (Web Service) | [https://travelmate-acy7.onrender.com/api](https://travelmate-acy7.onrender.com/api) |
+| **API Health & DB Probe** | Render | [https://travelmate-acy7.onrender.com/api/health](https://travelmate-acy7.onrender.com/api/health) |
 
 ---
 
@@ -319,7 +319,7 @@ Render free tier instances spin down after 15 minutes of inactivity, and Neon co
 2. **CLI Warmup Script:** Warm up both Render container and Neon connection pool prior to a presentation:
    ```bash
    cd backend
-   npm run keepalive https://travelmate-api.onrender.com
+   npm run keepalive https://travelmate-acy7.onrender.com
    ```
 3. **Comprehensive Guide:** See [docs/KEEPALIVE_GUIDE.md](docs/KEEPALIVE_GUIDE.md) for full instructions on external uptime monitors (Cron-Job.org, UptimeRobot).
 

@@ -9,7 +9,7 @@ on:
       target_url:
         description: 'Target API Health Endpoint URL'
         required: false
-        default: 'https://travelmate-api.onrender.com/api/health'
+        default: 'https://travelmate-acy7.onrender.com/api/health'
 
 jobs:
   ping:
@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Ping Health Endpoint
         run: |
-          URL="${{ secrets.RENDER_API_URL || github.event.inputs.target_url || 'https://travelmate-api.onrender.com/api/health' }}"
+          URL="${{ secrets.RENDER_API_URL || github.event.inputs.target_url || 'https://travelmate-acy7.onrender.com/api/health' }}"
           echo "Pinging: $URL"
           RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}\nTIME_TOTAL:%{time_total}s\n" --max-time 45 "$URL")
           echo "$RESPONSE"

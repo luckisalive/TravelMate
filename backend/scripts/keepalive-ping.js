@@ -2,7 +2,7 @@
  * TravelMate Production Keep-Alive Ping Script
  * 
  * Usage:
- *   node backend/scripts/keepalive-ping.js https://travelmate-api.onrender.com
+ *   node backend/scripts/keepalive-ping.js https://travelmate-acy7.onrender.com
  *   node backend/scripts/keepalive-ping.js
  * 
  * Purpose:

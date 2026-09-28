@@ -17,8 +17,8 @@ Have these credentials ready in a notepad or browser password manager prior to t
 | **User C (Solo Traveler)** | `charlie@example.com` | `Password123!` | Demonstrates IDOR access rejection and isolated user data |
 
 **Live Deployment URLs:**
-- **Frontend SPA (Vercel):** `https://travelmate-frontend.vercel.app` (or your specific Vercel URL)
-- **Backend API (Render):** `https://travelmate-api.onrender.com`
+- **Frontend SPA (Vercel):** `https://travel-mate-cyan-beta.vercel.app`
+- **Backend API (Render):** `https://travelmate-acy7.onrender.com`
 - **Database:** Serverless Neon PostgreSQL (AWS Frankfurt / ap-southeast)
 - **Local Fallback:** `http://localhost:3000` (Frontend) & `http://localhost:5000` (Backend)
 

@@ -25,6 +25,7 @@ const defaultOrigins = [
   'http://localhost:3000',
   'http://localhost:5000',
   'https://travel-mate-cyan-beta.vercel.app',
+  'https://travelmate-frontend.vercel.app',
 ];
 
 const envOrigins = process.env.CORS_ORIGIN
@@ -40,7 +41,7 @@ app.use(cors({
     if (!origin) return callback(null, true);
 
     const normalizedOrigin = origin.replace(/\/$/, '');
-    const isVercelDeployment = /^https:\/\/travel-mate[a-z0-9-]*\.vercel\.app$/.test(normalizedOrigin);
+    const isVercelDeployment = /^https:\/\/travel-?mate[a-z0-9-]*\.vercel\.app$/.test(normalizedOrigin) || normalizedOrigin.endsWith('.vercel.app');
 
     if (allowedOrigins.includes('*') || allowedOrigins.includes(normalizedOrigin) || isVercelDeployment) {
       return callback(null, true);
@@ -58,8 +59,8 @@ app.use(express.json());
 
 const db = require('./config/db');
 
-// API Health Check (also warms database connection pool)
-app.get('/api/health', async (req, res) => {
+// Health Check Handler (also warms database connection pool)
+const healthHandler = async (req, res) => {
   try {
     await db.query('SELECT 1');
     res.json({
@@ -77,9 +78,35 @@ app.get('/api/health', async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   }
-});
+};
 
-// Mount Routes
+app.get(['/api/health', '/health'], healthHandler);
+
+// Root and API Index Handlers
+const rootHandler = (req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'TravelMate API',
+    version: '1.0.0',
+    documentation: 'https://github.com/luckisalive/TravelMate',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      hotels: '/api/hotels',
+      transport: '/api/transport',
+      trips: '/api/trips',
+      estimator: '/api/estimator/estimate',
+      rates: '/api/rates',
+      reviews: '/api/reviews',
+      notifications: '/api/notifications',
+    },
+    timestamp: new Date().toISOString(),
+  });
+};
+
+app.get(['/', '/api', '/api/'], rootHandler);
+
+// Mount Routes with /api prefix (primary)
 app.use('/api/auth', authRoutes);
 app.use('/api/rates', rateRoutes);
 app.use('/api/hotels', hotelRoutes);
@@ -91,6 +118,19 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/estimator', estimatorRoutes);
+
+// Dual-mount routes without /api prefix for client resilience
+app.use('/auth', authRoutes);
+app.use('/rates', rateRoutes);
+app.use('/hotels', hotelRoutes);
+app.use('/trips', tripRoutes);
+app.use('/bookings', bookingRoutes);
+app.use('/transport', transportRoutes);
+app.use('/settlements', settlementRoutes);
+app.use('/notifications', notificationRoutes);
+app.use('/reviews', reviewRoutes);
+app.use('/recommendations', recommendationRoutes);
+app.use('/estimator', estimatorRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

@@ -25,7 +25,7 @@ External monitors send an automated HTTP `GET` request every 5 to 10 minutes, ke
 2. Click **Create Cronjob**.
 3. Fill in:
    - **Title:** `TravelMate Keep-Alive`
-   - **Address (URL):** `https://<your-app>.onrender.com/api/health`
+   - **Address (URL):** `https://travelmate-acy7.onrender.com/api/health`
    - **Schedule:** Every 10 minutes (`*/10 * * * *`).
 4. Click **Save**.
 
@@ -35,7 +35,7 @@ External monitors send an automated HTTP `GET` request every 5 to 10 minutes, ke
 3. Configure:
    - **Monitor Type:** `HTTP(s)`
    - **Friendly Name:** `TravelMate Render API`
-   - **URL (or IP):** `https://<your-app>.onrender.com/api/health`
+   - **URL (or IP):** `https://travelmate-acy7.onrender.com/api/health`
    - **Monitoring Interval:** Every 5 or 10 minutes.
 4. Save the monitor.
 
@@ -51,7 +51,7 @@ The repository includes a ready-to-use GitHub Actions workflow at [`.github/work
   1. Push the code to your GitHub repository.
   2. Navigate to your GitHub repository **Settings** > **Secrets and variables** > **Actions**.
   3. Add a repository secret named `RENDER_API_URL` with your Render backend URL:
-     `https://<your-app>.onrender.com/api/health`
+     `https://travelmate-acy7.onrender.com/api/health`
   4. Enable GitHub Actions in your repository tab.
 
 ---
@@ -62,10 +62,10 @@ Before stepping into the viva examination room, run the built-in warm-up script 
 
 ```bash
 # From the backend directory:
-npm run keepalive https://<your-app>.onrender.com
+npm run keepalive https://travelmate-acy7.onrender.com
 
 # Example output:
-# [Keep-Alive] Pinging target: https://travelmate-api.onrender.com/api/health
+# [Keep-Alive] Pinging target: https://travelmate-acy7.onrender.com/api/health
 # [Keep-Alive] Status Code: 200
 # [Keep-Alive] Response Time: 342ms
 # [Keep-Alive] Health Payload: { status: 'ok', service: 'TravelMate API', timestamp: '...' }
