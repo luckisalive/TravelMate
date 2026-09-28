@@ -49,6 +49,7 @@ import TripModal from './TripModal';
 import TripBalancesView from './TripBalancesView';
 import ItineraryView from '../itinerary/ItineraryView';
 import CostEstimatorModal from '../estimator/CostEstimatorModal';
+import ErrorBoundary from '../common/ErrorBoundary';
 import { TripDetailSkeleton } from '../common/Skeletons';
 import EmptyState from '../common/EmptyState';
 
@@ -901,13 +902,15 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
 
       {/* MODALS */}
       {estimatorModalOpen && (
-        <CostEstimatorModal
-          isOpen={estimatorModalOpen}
-          onClose={() => setEstimatorModalOpen(false)}
-          tripId={tripId}
-          initialBudget={trip?.budget}
-          initialDays={trip?.duration_days}
-        />
+        <ErrorBoundary onReset={() => setEstimatorModalOpen(false)}>
+          <CostEstimatorModal
+            isOpen={estimatorModalOpen}
+            onClose={() => setEstimatorModalOpen(false)}
+            tripId={tripId}
+            initialBudget={trip?.budget}
+            initialDays={trip?.duration_days}
+          />
+        </ErrorBoundary>
       )}
 
       {expenseModalOpen && (

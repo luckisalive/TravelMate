@@ -16,7 +16,15 @@ import api from '../../services/api';
 import { useCurrency } from '../../context/CurrencyContext';
 
 export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa', tripId = null, initialBudget = 0, initialDays = 4 }) {
-  const { formatWithHome } = useCurrency();
+  const { formatWithHome, formatPrice } = useCurrency();
+  const formatAmount = (val) => {
+    if (typeof formatWithHome === 'function') return formatWithHome(val, 'INR');
+    if (typeof formatPrice === 'function') {
+      const res = formatPrice(val, 'INR');
+      return res?.fullDisplay || res?.formatted || `₹${Number(val || 0).toLocaleString()}`;
+    }
+    return `₹${Number(val || 0).toLocaleString()}`;
+  };
 
   const [city, setCity] = useState(initialCity || 'Goa');
   const [days, setDays] = useState(initialDays || 4);
@@ -324,7 +332,7 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                         )}
                       </div>
                       <h4 className="text-2xl font-black tracking-tight">
-                        {formatWithHome(pkg.breakdown.total_estimate, 'INR')}
+                        {formatAmount(pkg.breakdown.total_estimate)}
                       </h4>
                       <p className="text-xs opacity-85 mt-1 leading-snug">
                         {pkg.description}
@@ -341,15 +349,15 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                             Accommodations ({pkg.breakdown.stay.nights} nights)
                           </span>
                           <span className="text-slate-800 dark:text-slate-100 font-bold">
-                            {formatWithHome(pkg.breakdown.stay.total, 'INR')}
+                            {formatAmount(pkg.breakdown.stay.total)}
                           </span>
                         </div>
                         <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-slate-700 dark:text-slate-300">
                           <p className="font-semibold text-slate-900 dark:text-white truncate">
-                            {pkg.hotel.name}
+                            {pkg.hotel?.name || 'Selected Stay'}
                           </p>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                            {formatWithHome(pkg.hotel.price_per_night, 'INR')} / night
+                            {formatAmount(pkg.hotel?.price_per_night || 0)} / night
                           </p>
                         </div>
                       </div>
@@ -362,15 +370,15 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                             Transit (Round-trip)
                           </span>
                           <span className="text-slate-800 dark:text-slate-100 font-bold">
-                            {formatWithHome(pkg.breakdown.transport.total, 'INR')}
+                            {formatAmount(pkg.breakdown.transport.total)}
                           </span>
                         </div>
                         <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-slate-700 dark:text-slate-300">
                           <p className="font-semibold text-slate-900 dark:text-white truncate">
-                            {pkg.transport_outbound.operator ? `${pkg.transport_outbound.operator} ${pkg.transport_outbound.number}` : `${pkg.transport_outbound.mode} Transit`}
+                            {pkg.transport_outbound?.operator ? `${pkg.transport_outbound.operator} ${pkg.transport_outbound.number}` : `${pkg.transport_outbound?.mode || 'Scheduled'} Transit`}
                           </p>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                            {pkg.transport_outbound.class ? `Class: ${pkg.transport_outbound.class}` : 'Scheduled corridor fare'}
+                            {pkg.transport_outbound?.class ? `Class: ${pkg.transport_outbound.class}` : 'Scheduled corridor fare'}
                           </p>
                         </div>
                       </div>
@@ -383,12 +391,12 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                             Daily Allowance ({pkg.breakdown.allowance.days} days)
                           </span>
                           <span className="text-slate-800 dark:text-slate-100 font-bold">
-                            {formatWithHome(pkg.breakdown.allowance.total, 'INR')}
+                            {formatAmount(pkg.breakdown.allowance.total)}
                           </span>
                         </div>
                         <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-slate-700 dark:text-slate-300">
                           <p className="font-semibold text-slate-900 dark:text-white">
-                            {formatWithHome(pkg.daily_allowance_rate, 'INR')} / day
+                            {formatAmount(pkg.daily_allowance_rate)} / day
                           </p>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">
                             Food, intra-city transit, and ticketed entries
@@ -405,12 +413,12 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                           {isOver ? (
                             <>
                               <TrendingUp className="w-3.5 h-3.5" />
-                              Over by {formatWithHome(Math.abs(pkg.budget_comparison.variance), 'INR')}
+                              Over by {formatAmount(Math.abs(pkg.budget_comparison?.variance || 0))}
                             </>
                           ) : (
                             <>
                               <TrendingDown className="w-3.5 h-3.5" />
-                              Under by {formatWithHome(pkg.budget_comparison.variance, 'INR')}
+                              Under by {formatAmount(pkg.budget_comparison?.variance || 0)}
                             </>
                           )}
                         </span>
@@ -424,12 +432,12 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                               className={`h-full rounded-full transition-all ${
                                 isOver ? 'bg-rose-500' : 'bg-emerald-500'
                               }`}
-                              style={{ width: `${Math.min(100, pkg.budget_comparison.budget_utilization_pct || 0)}%` }}
+                              style={{ width: `${Math.min(100, pkg.budget_comparison?.budget_utilization_pct || 0)}%` }}
                             />
                           </div>
                           <div className="flex justify-between text-[10px] text-slate-400">
-                            <span>{pkg.budget_comparison.budget_utilization_pct}% of budget</span>
-                            <span>Target: {formatWithHome(budget, 'INR')}</span>
+                            <span>{pkg.budget_comparison?.budget_utilization_pct || 0}% of budget</span>
+                            <span>Target: {formatAmount(budget)}</span>
                           </div>
                         </div>
                       )}

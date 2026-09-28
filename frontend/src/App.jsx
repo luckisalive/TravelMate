@@ -12,6 +12,7 @@ import MyBookingsView from './components/hotels/MyBookingsView';
 import TripsListView from './components/trips/TripsListView';
 import TripDetailView from './components/trips/TripDetailView';
 import CostEstimatorModal from './components/estimator/CostEstimatorModal';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import TravelHeroIllustration from './components/illustrations/TravelHeroIllustration';
 import { 
   TransportIllustration, 
@@ -597,10 +598,12 @@ function MainContent() {
 
       {/* Standalone Cost Estimator Modal */}
       {estimatorModalOpen && (
-        <CostEstimatorModal
-          isOpen={estimatorModalOpen}
-          onClose={() => setEstimatorModalOpen(false)}
-        />
+        <ErrorBoundary onReset={() => setEstimatorModalOpen(false)}>
+          <CostEstimatorModal
+            isOpen={estimatorModalOpen}
+            onClose={() => setEstimatorModalOpen(false)}
+          />
+        </ErrorBoundary>
       )}
     </div>
   );
@@ -612,7 +615,9 @@ export default function App() {
       <AuthProvider>
         <CurrencyProvider>
           <ToastProvider>
-            <MainContent />
+            <ErrorBoundary>
+              <MainContent />
+            </ErrorBoundary>
             <Analytics />
           </ToastProvider>
         </CurrencyProvider>

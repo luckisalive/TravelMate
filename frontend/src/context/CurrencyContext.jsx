@@ -120,6 +120,11 @@ export function CurrencyProvider({ children }) {
     };
   };
 
+  const formatWithHome = (amountINR, targetCurrency = null) => {
+    const result = formatPrice(amountINR, targetCurrency);
+    return result.fullDisplay;
+  };
+
   return (
     <CurrencyContext.Provider
       value={{
@@ -127,6 +132,7 @@ export function CurrencyProvider({ children }) {
         homeCurrency,
         setCurrency,
         formatPrice,
+        formatWithHome,
         rates,
         rateDate,
         loading,
