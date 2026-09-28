@@ -163,7 +163,7 @@ function MainContent() {
             )
           ) : (
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-800 max-w-md mx-auto space-y-4 shadow-sm my-12 animate-in fade-in">
-              <div className="w-16 h-16 rounded-3xl bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-cyan-400 flex items-center justify-center mx-auto shadow-xs">
+              <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto shadow-xs">
                 <Lock className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">Sign in to Access Trips & Expenses</h3>
@@ -173,7 +173,7 @@ function MainContent() {
               <div className="flex items-center justify-center gap-3 pt-2">
                 <button
                   onClick={() => openAuth('login')}
-                  className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                 >
                   Sign In
                 </button>
@@ -187,56 +187,53 @@ function MainContent() {
             </div>
           )
         ) : user ? (
-          /* Logged In Dashboard View */
+          /* Logged In Dashboard View - Flat & Cohesive */
           <div className="space-y-8 animate-in fade-in duration-300">
             {/* Welcome Banner */}
-            <div className="bg-gradient-to-r from-violet-700 via-indigo-700 to-cyan-800 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
+            <div className="bg-slate-900 dark:bg-slate-900 rounded-3xl p-8 text-white border border-slate-800 shadow-xs relative">
               <div className="relative z-10 max-w-2xl">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-cyan-100 backdrop-blur-sm mb-3">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-950/80 text-blue-300 border border-blue-800/70 mb-3">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-400" />
                   Travel Style: {user.travel_style.toUpperCase()}
                 </span>
                 <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
                   Welcome, {user.name}!
                 </h1>
-                <p className="mt-2 text-indigo-100 text-sm sm:text-base leading-relaxed">
+                <p className="mt-2 text-slate-300 text-sm sm:text-base leading-relaxed">
                   Plan your itinerary, search hotels & transport, reserve seats, track spending against budgets, and split group costs without hassle.
                 </p>
 
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <button 
                     onClick={() => navigateTo('trips', null)}
-                    className="px-5 py-2.5 bg-white text-violet-800 hover:bg-violet-50 font-semibold text-sm rounded-xl shadow-md transition-colors flex items-center gap-2 cursor-pointer"
+                    className="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 font-semibold text-sm rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <Wallet className="w-4 h-4" />
                     <span>My Trips & Expenses</span>
                   </button>
                   <button 
                     onClick={() => navigateTo('transport')}
-                    className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-medium text-sm rounded-xl border border-white/20 backdrop-blur-sm transition-colors flex items-center gap-2 cursor-pointer"
+                    className="px-5 py-2.5 bg-slate-800 hover:bg-slate-750 text-white font-medium text-sm rounded-xl border border-slate-700 transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <Plane className="w-4 h-4" />
                     <span>Search Flights & Trains</span>
                   </button>
                   <button 
                     onClick={() => navigateTo('hotels')}
-                    className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-medium text-sm rounded-xl border border-white/20 backdrop-blur-sm transition-colors flex items-center gap-2 cursor-pointer"
+                    className="px-5 py-2.5 bg-slate-800 hover:bg-slate-750 text-white font-medium text-sm rounded-xl border border-slate-700 transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <Building2 className="w-4 h-4" />
                     <span>Browse Hotels</span>
                   </button>
                   <button 
                     onClick={() => navigateTo('bookings')}
-                    className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-medium text-sm rounded-xl border border-white/20 backdrop-blur-sm transition-colors flex items-center gap-2 cursor-pointer"
+                    className="px-5 py-2.5 bg-slate-800 hover:bg-slate-750 text-white font-medium text-sm rounded-xl border border-slate-700 transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <Ticket className="w-4 h-4" />
                     <span>My Reservations</span>
                   </button>
                 </div>
               </div>
-
-              {/* Decorative Circle */}
-              <div className="absolute -right-12 -bottom-16 w-64 h-64 rounded-full bg-white/10 blur-2xl pointer-events-none" />
             </div>
 
             {/* Quick Actions Grid */}
@@ -247,8 +244,6 @@ function MainContent() {
                   title: 'Trips & Expenses',
                   desc: 'Multi-currency budget tracking, category donut charts, and spending timeline.',
                   icon: Receipt,
-                  color: 'from-violet-600 to-indigo-600',
-                  bg: 'bg-violet-50',
                   badge: 'Budget Sync',
                   onClick: () => navigateTo('trips', null),
                 },
@@ -257,8 +252,6 @@ function MainContent() {
                   title: 'Flights & Trains',
                   desc: 'Interactive 30-row flight seat maps, train tiers, and bus routes.',
                   icon: Plane,
-                  color: 'from-teal-500 to-cyan-600',
-                  bg: 'bg-teal-50',
                   badge: 'Seat Selection',
                   onClick: () => navigateTo('transport'),
                 },
@@ -267,8 +260,6 @@ function MainContent() {
                   title: 'Hotels & Stays',
                   desc: 'Search verified OpenStreetMap stays across top destinations.',
                   icon: Building2,
-                  color: 'from-sky-500 to-indigo-500',
-                  bg: 'bg-sky-50',
                   badge: 'Curated Stays',
                   onClick: () => navigateTo('hotels'),
                 },
@@ -277,8 +268,6 @@ function MainContent() {
                   title: 'My Reservations',
                   desc: 'Manage hotel vouchers, flight boarding passes & cancellations.',
                   icon: Ticket,
-                  color: 'from-indigo-600 to-purple-600',
-                  bg: 'bg-indigo-50',
                   badge: 'E-Tickets',
                   onClick: () => navigateTo('bookings'),
                 },
@@ -287,8 +276,6 @@ function MainContent() {
                   title: 'Trip Cost Estimator',
                   desc: 'Predict and compare expenditure across budget, balanced, and comfort styles.',
                   icon: Calculator,
-                  color: 'from-amber-500 to-rose-500',
-                  bg: 'bg-amber-50',
                   badge: 'Smart Forecast',
                   onClick: () => setEstimatorModalOpen(true),
                 },
@@ -298,10 +285,10 @@ function MainContent() {
                   <div
                     key={card.id}
                     onClick={card.onClick}
-                    className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all cursor-pointer group hover:-translate-y-0.5 relative"
+                    className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer group hover:-translate-y-0.5 relative"
                   >
                     <div className="flex items-center justify-between mb-4">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-tr ${card.color} text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform`}>
+                      <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center transition-colors">
                         <IconComponent className="w-6 h-6" />
                       </div>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
@@ -310,7 +297,7 @@ function MainContent() {
                     </div>
                     <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base mb-1 flex items-center justify-between">
                       <span>{card.title}</span>
-                      <ArrowUpRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-violet-600 dark:group-hover:text-cyan-400 transition-colors" />
+                      <ArrowUpRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{card.desc}</p>
                   </div>
@@ -319,7 +306,7 @@ function MainContent() {
             </div>
 
             {/* Hub Status Summary */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 shadow-xs">
               <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div>
                   <h2 className="text-lg font-bold text-slate-800 dark:text-white capitalize">
@@ -336,8 +323,8 @@ function MainContent() {
               </div>
 
               <div className="py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-5 rounded-2xl bg-violet-50/60 dark:bg-slate-800/60 border border-violet-100 dark:border-slate-800 space-y-2">
-                  <div className="text-xs font-bold text-violet-900 dark:text-violet-300 uppercase tracking-wider">
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-2">
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                     Dual-Currency Engine & Daily Sync
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-400">
@@ -345,27 +332,27 @@ function MainContent() {
                   </p>
                   <button
                     onClick={() => navigateTo('trips', null)}
-                    className="text-xs font-bold text-violet-700 dark:text-cyan-400 hover:underline flex items-center gap-1 pt-1 cursor-pointer"
+                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 pt-1 cursor-pointer"
                   >
                     <span>Manage Expenses</span>
                     <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-cyan-50/60 dark:bg-slate-800/60 border border-cyan-100 dark:border-slate-800 space-y-2">
-                  <div className="text-xs font-bold text-cyan-900 dark:text-cyan-300 uppercase tracking-wider">
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-2">
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                     Visual Budget Analytics
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-400">
                     Category spending donut charts (Food, Stay, Transport, Activities), day-by-day spending timelines, and real-time budget utilization gauges with over-budget alerts.
                   </p>
-                  <div className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 pt-1 flex items-center gap-1">
+                  <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 pt-1 flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>Real-time Financial Graphs Active</span>
                   </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-2">
                   <div className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                     Flights, Stays & Reservations
                   </div>
@@ -389,13 +376,13 @@ function MainContent() {
             {/* Hero Section with Modern Vector Illustration */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center pt-4 sm:pt-8">
               <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-violet-50 dark:bg-violet-950/60 border border-violet-200 dark:border-violet-800/70 text-violet-700 dark:text-violet-300 shadow-2xs">
-                  <Sparkles className="w-3.5 h-3.5 text-violet-600 dark:text-cyan-400" />
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-300 shadow-2xs">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                   <span>The Modern Travel Operating Platform</span>
                 </div>
 
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.12]">
-                  Plan, Book, and Split Trips in <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-500 dark:from-violet-400 dark:via-indigo-300 dark:to-cyan-400 bg-clip-text text-transparent">One Workspace</span>
+                  Plan, Book, and Split Trips in <span className="text-blue-600 dark:text-blue-400">One Workspace</span>
                 </h1>
 
                 <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
@@ -405,7 +392,7 @@ function MainContent() {
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
                   <button
                     onClick={() => openAuth('register')}
-                    className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/35 transition-all cursor-pointer flex items-center gap-2"
+                    className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-xs transition-colors cursor-pointer flex items-center gap-2"
                   >
                     <span>Get Started Free</span>
                     <ArrowRight className="w-4 h-4" />
@@ -420,7 +407,7 @@ function MainContent() {
                     onClick={() => setEstimatorModalOpen(true)}
                     className="px-5 py-3.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-sm border border-slate-200 dark:border-slate-800 shadow-2xs transition-colors cursor-pointer flex items-center gap-2"
                   >
-                    <Calculator className="w-4 h-4 text-amber-500" />
+                    <Calculator className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                     <span>Cost Estimator</span>
                   </button>
                 </div>
@@ -452,19 +439,19 @@ function MainContent() {
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 shadow-xs">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
                 <div className="space-y-1">
-                  <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">40+</div>
+                  <div className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400">40+</div>
                   <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Flight & Rail Corridors</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-2xl sm:text-3xl font-black text-violet-600 dark:text-cyan-400">30+</div>
+                  <div className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400">30+</div>
                   <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Global Currencies</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">1-Click</div>
+                  <div className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400">1-Click</div>
                   <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Group Debt Settlement</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-2xl sm:text-3xl font-black text-cyan-600 dark:text-cyan-300">100%</div>
+                  <div className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400">100%</div>
                   <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Transparent Forecasts</div>
                 </div>
               </div>
@@ -473,7 +460,7 @@ function MainContent() {
             {/* Illustrated Feature Showcase Cards */}
             <div className="space-y-8">
               <div className="text-center max-w-2xl mx-auto space-y-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-violet-600 dark:text-cyan-400 bg-violet-50 dark:bg-violet-950/60 px-3 py-1 rounded-full border border-violet-100 dark:border-violet-800/60">
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-3 py-1 rounded-full border border-blue-200 dark:border-blue-900">
                   Engineered For Seamless Journeys
                 </span>
                 <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -486,10 +473,10 @@ function MainContent() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Feature 1: Transport & Seat Maps */}
-                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors overflow-hidden flex flex-col justify-between group">
                   <div className="p-6 sm:p-8 space-y-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-300 flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                         <Plane className="w-5 h-5" />
                       </div>
                       <h3 className="text-xl font-bold text-slate-900 dark:text-white">Multi-Modal Transport & Real-Time Seat Maps</h3>
@@ -504,10 +491,10 @@ function MainContent() {
                 </div>
 
                 {/* Feature 2: Group Expense & Settlement */}
-                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors overflow-hidden flex flex-col justify-between group">
                   <div className="p-6 sm:p-8 space-y-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-300 flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                         <Users className="w-5 h-5" />
                       </div>
                       <h3 className="text-xl font-bold text-slate-900 dark:text-white">Group Expense Splitting & Debt Simplification</h3>
@@ -522,10 +509,10 @@ function MainContent() {
                 </div>
 
                 {/* Feature 3: Curated Stays */}
-                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors overflow-hidden flex flex-col justify-between group">
                   <div className="p-6 sm:p-8 space-y-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                         <Building2 className="w-5 h-5" />
                       </div>
                       <h3 className="text-xl font-bold text-slate-900 dark:text-white">Curated Accommodations & Rate Comparison</h3>
@@ -540,10 +527,10 @@ function MainContent() {
                 </div>
 
                 {/* Feature 4: Cost Estimator */}
-                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors overflow-hidden flex flex-col justify-between group">
                   <div className="p-6 sm:p-8 space-y-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-300 flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                         <Calculator className="w-5 h-5" />
                       </div>
                       <h3 className="text-xl font-bold text-slate-900 dark:text-white">Predictive Multi-Package Cost Estimator</h3>
@@ -559,10 +546,10 @@ function MainContent() {
               </div>
             </div>
 
-            {/* Sleek CTA Banner */}
-            <div className="bg-gradient-to-r from-slate-950 via-violet-950 to-slate-950 dark:from-slate-900 dark:via-indigo-950 dark:to-slate-900 rounded-3xl p-8 sm:p-12 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+            {/* Sleek CTA Banner (Flat Surface) */}
+            <div className="bg-slate-900 dark:bg-slate-900 rounded-3xl p-8 sm:p-12 text-white border border-slate-800 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6 relative">
               <div className="space-y-3 text-center md:text-left relative z-10 max-w-xl">
-                <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">
+                <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">
                   Ready to upgrade your journey?
                 </span>
                 <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
@@ -576,22 +563,18 @@ function MainContent() {
               <div className="flex flex-wrap items-center justify-center gap-3 relative z-10">
                 <button
                   onClick={() => openAuth('register')}
-                  className="px-6 py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg transition-all cursor-pointer flex items-center gap-2"
+                  className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-2"
                 >
                   <span>Create Free Account</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => openAuth('login')}
-                  className="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-sm rounded-xl border border-white/20 transition-all cursor-pointer"
+                  className="px-6 py-3.5 bg-slate-800 hover:bg-slate-750 text-white font-semibold text-sm rounded-xl border border-slate-700 transition-colors cursor-pointer"
                 >
                   Sign In
                 </button>
               </div>
-
-              {/* Decorative Glow */}
-              <div className="absolute -left-12 -top-12 w-60 h-60 rounded-full bg-violet-600/20 blur-3xl pointer-events-none" />
-              <div className="absolute -right-12 -bottom-12 w-60 h-60 rounded-full bg-cyan-600/20 blur-3xl pointer-events-none" />
             </div>
           </div>
         )}

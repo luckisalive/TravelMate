@@ -15,12 +15,12 @@ export default function EmptyIllustration({ className = 'w-48 h-36 mx-auto' }) {
       >
         <defs>
           <linearGradient id="bagGrad" x1="80" y1="40" x2="160" y2="150" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#4F46E5" />
-            <stop offset="1" stopColor="#3730A3" />
+            <stop stopColor="#2563EB" />
+            <stop offset="1" stopColor="#1D4ED8" />
           </linearGradient>
           <linearGradient id="pocketGrad" x1="90" y1="80" x2="150" y2="140" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#6366F1" />
-            <stop offset="1" stopColor="#4F46E5" />
+            <stop stopColor="#3B82F6" />
+            <stop offset="1" stopColor="#2563EB" />
           </linearGradient>
           <linearGradient id="groundGlow" x1="30" y1="160" x2="210" y2="160" gradientUnits="userSpaceOnUse">
             <stop stopColor="#E2E8F0" />
@@ -44,28 +44,28 @@ export default function EmptyIllustration({ className = 'w-48 h-36 mx-auto' }) {
         {/* Travel Backpack Center */}
         <g transform="translate(85, 35)">
           {/* Top Handle */}
-          <path d="M 22 15 C 22 2, 48 2, 48 15" stroke="#312E81" strokeWidth="4" strokeLinecap="round" fill="none" />
+          <path d="M 22 15 C 22 2, 48 2, 48 15" stroke="#1E3A8A" strokeWidth="4" strokeLinecap="round" fill="none" />
           
           {/* Main Body */}
           <path d="M 8 18 C 8 10, 62 10, 62 18 L 66 115 C 66 122, 4 122, 4 115 Z" fill="url(#bagGrad)" />
           
           {/* Top Flap */}
-          <path d="M 6 18 C 6 12, 64 12, 64 18 L 60 52 C 60 56, 10 56, 10 52 Z" fill="#312E81" />
+          <path d="M 6 18 C 6 12, 64 12, 64 18 L 60 52 C 60 56, 10 56, 10 52 Z" fill="#1E3A8A" />
           <rect x="31" y="44" width="8" height="12" rx="2" fill="#F59E0B" />
 
           {/* Front Pocket */}
           <rect x="14" y="66" width="42" height="42" rx="8" fill="url(#pocketGrad)" />
-          <path d="M 14 74 L 56 74" stroke="#4338CA" strokeWidth="2" />
+          <path d="M 14 74 L 56 74" stroke="#1D4ED8" strokeWidth="2" />
           <circle cx="35" cy="74" r="3" fill="#FDE047" />
 
           {/* Side Pocket Left */}
-          <rect x="0" y="70" width="8" height="32" rx="4" fill="#3730A3" />
+          <rect x="0" y="70" width="8" height="32" rx="4" fill="#1E40AF" />
           {/* Water Bottle sticking out */}
           <rect x="1" y="56" width="6" height="18" rx="2" fill="#38BDF8" />
           <rect x="2" y="52" width="4" height="4" rx="1" fill="#0284C7" />
 
           {/* Side Pocket Right */}
-          <rect x="62" y="70" width="8" height="32" rx="4" fill="#3730A3" />
+          <rect x="62" y="70" width="8" height="32" rx="4" fill="#1E40AF" />
         </g>
 
         {/* Sunglasses in front */}

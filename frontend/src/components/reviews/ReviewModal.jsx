@@ -52,18 +52,18 @@ export default function ReviewModal({ isOpen, onClose, booking, onReviewSubmitte
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 dark:border-slate-800">
         {/* Header */}
-        <div className="px-6 py-5 bg-gradient-to-r from-amber-500 to-amber-600 text-white flex items-center justify-between">
+        <div className="px-6 py-5 bg-slate-900 dark:bg-slate-950 text-white border-b border-slate-800 flex items-center justify-between">
           <div>
             <h3 className="font-bold text-lg">Rate & Review</h3>
-            <p className="text-amber-100 text-xs truncate max-w-[280px]">
+            <p className="text-slate-400 text-xs truncate max-w-[280px]">
               {title}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-amber-100 hover:text-white p-1 rounded-full transition-colors"
+            className="text-slate-400 hover:text-white p-1 rounded-full transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -73,23 +73,23 @@ export default function ReviewModal({ isOpen, onClose, booking, onReviewSubmitte
         {success ? (
           <div className="p-8 text-center">
             <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3 animate-bounce" />
-            <h4 className="text-slate-900 font-bold text-base mb-1">Review Published!</h4>
-            <p className="text-slate-500 text-xs">
+            <h4 className="text-slate-900 dark:text-white font-bold text-base mb-1">Review Published!</h4>
+            <p className="text-slate-500 dark:text-slate-400 text-xs">
               Thank you for sharing your experience with the TravelMate community.
             </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             {error && (
-              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
                 <span>{error}</span>
               </div>
             )}
 
             {/* Star Rating Selector */}
             <div className="text-center">
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                 Your Rating
               </label>
               <div className="flex items-center justify-center gap-2">
@@ -100,19 +100,19 @@ export default function ReviewModal({ isOpen, onClose, booking, onReviewSubmitte
                     onMouseEnter={() => setHoverRating(star)}
                     onMouseLeave={() => setHoverRating(0)}
                     onClick={() => setRating(star)}
-                    className="p-1 text-slate-300 hover:scale-125 transition-transform focus:outline-none"
+                    className="p-1 text-slate-300 dark:text-slate-600 hover:scale-125 transition-transform focus:outline-none cursor-pointer"
                   >
                     <Star
                       className={`w-8 h-8 transition-colors ${
                         (hoverRating || rating) >= star
                           ? 'text-amber-400 fill-amber-400'
-                          : 'text-slate-200'
+                          : 'text-slate-200 dark:text-slate-700'
                       }`}
                     />
                   </button>
                 ))}
               </div>
-              <span className="text-xs font-medium text-slate-500 mt-1 block">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 block">
                 {rating === 5 && 'Outstanding Experience (5★)'}
                 {rating === 4 && 'Very Good (4★)'}
                 {rating === 3 && 'Average / Good (3★)'}
@@ -123,7 +123,7 @@ export default function ReviewModal({ isOpen, onClose, booking, onReviewSubmitte
 
             {/* Comment Area */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Review Comments (Optional)
               </label>
               <textarea
@@ -131,7 +131,7 @@ export default function ReviewModal({ isOpen, onClose, booking, onReviewSubmitte
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Share highlights of your stay, cleanliness, location convenience, or transit punctuality..."
                 rows={4}
-                className="w-full text-xs text-slate-800 p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 resize-none"
+                className="w-full text-xs text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
               />
             </div>
 
@@ -141,14 +141,14 @@ export default function ReviewModal({ isOpen, onClose, booking, onReviewSubmitte
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
+                className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs rounded-xl shadow-md shadow-amber-500/20 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
               >
                 {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Submit Review

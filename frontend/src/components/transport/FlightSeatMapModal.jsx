@@ -129,14 +129,14 @@ export default function FlightSeatMapModal({ isOpen, onClose, transport, onBooki
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
       <div 
-        className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200"
+        className="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-sky-700 via-indigo-700 to-indigo-900 text-white flex items-center justify-between">
+        <div className="px-6 py-4 bg-slate-900 dark:bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center">
-              <Plane className="w-5 h-5 text-sky-200" />
+            <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xs">
+              <Plane className="w-5 h-5 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -148,7 +148,7 @@ export default function FlightSeatMapModal({ isOpen, onClose, transport, onBooki
                   {transport.class}
                 </span>
               </div>
-              <p className="text-xs text-indigo-100 mt-0.5">
+              <p className="text-xs text-slate-300 mt-0.5">
                 {transport.origin?.city} ({transport.origin?.code}) → {transport.destination?.city} ({transport.destination?.code}) • {departureDateFormatted} at {departureTime}
               </p>
             </div>
@@ -156,7 +156,7 @@ export default function FlightSeatMapModal({ isOpen, onClose, transport, onBooki
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -164,7 +164,7 @@ export default function FlightSeatMapModal({ isOpen, onClose, transport, onBooki
 
         {/* Error Notification */}
         {errorMessage && (
-          <div className="mx-6 mt-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+          <div className="mx-6 mt-4 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
             <span>{errorMessage}</span>
           </div>
@@ -175,24 +175,24 @@ export default function FlightSeatMapModal({ isOpen, onClose, transport, onBooki
           {/* Left Column: Airplane Cabin Visualization */}
           <div className="lg:col-span-8 flex flex-col items-center">
             {/* Legend */}
-            <div className="w-full flex flex-wrap items-center justify-center gap-4 py-2 px-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 mb-4">
+            <div className="w-full flex flex-wrap items-center justify-center gap-4 py-2 px-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 mb-4">
               <div className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded-md border border-slate-300 bg-white" />
+                <div className="w-4 h-4 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900" />
                 <span>Available</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded-md bg-indigo-600 border border-indigo-600 text-white flex items-center justify-center text-[10px]">
+                <div className="w-4 h-4 rounded-md bg-blue-600 border border-blue-600 text-white flex items-center justify-center text-[10px]">
                   ✓
                 </div>
-                <span className="font-semibold text-indigo-700">Selected</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400">Selected</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded-md bg-slate-200 border border-slate-300 text-slate-400 flex items-center justify-center text-[10px]">
+                <div className="w-4 h-4 rounded-md bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500 flex items-center justify-center text-[10px]">
                   ✕
                 </div>
                 <span>Occupied</span>
               </div>
-              <div className="flex items-center gap-1.5 text-slate-400">
+              <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
                 <span>• Window (A, F)</span>
                 <span>• Aisle (C, D)</span>
               </div>
@@ -202,18 +202,18 @@ export default function FlightSeatMapModal({ isOpen, onClose, transport, onBooki
               <FlightSeatMapSkeleton />
             ) : (
               /* Airplane Cabin Fuselage */
-              <div className="w-full max-w-md bg-slate-50 border-2 border-slate-300 rounded-[50px_50px_20px_20px] p-4 sm:p-6 shadow-inner relative flex flex-col items-center">
+              <div className="w-full max-w-md bg-slate-50 dark:bg-slate-950/60 border-2 border-slate-300 dark:border-slate-700 rounded-[50px_50px_20px_20px] p-4 sm:p-6 shadow-inner relative flex flex-col items-center">
                 {/* Cockpit / Nose cone representation */}
-                <div className="w-24 h-10 border-t-2 border-x-2 border-slate-400 rounded-t-full bg-slate-200/80 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+                <div className="w-24 h-10 border-t-2 border-x-2 border-slate-400 dark:border-slate-600 rounded-t-full bg-slate-200/80 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">
                   Cockpit
                 </div>
 
                 {/* Column Headers */}
-                <div className="w-full grid grid-cols-7 gap-1 text-center font-bold text-xs text-slate-500 pb-2 border-b border-slate-200 mb-2">
+                <div className="w-full grid grid-cols-7 gap-1 text-center font-bold text-xs text-slate-500 dark:text-slate-400 pb-2 border-b border-slate-200 dark:border-slate-700 mb-2">
                   <div>A</div>
                   <div>B</div>
                   <div>C</div>
-                  <div className="text-[10px] text-slate-300 uppercase tracking-wider flex items-center justify-center">Aisle</div>
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center justify-center">Aisle</div>
                   <div>D</div>
                   <div>E</div>
                   <div>F</div>
@@ -252,14 +252,14 @@ export default function FlightSeatMapModal({ isOpen, onClose, transport, onBooki
                             setErrorMessage(null);
                           }}
                           title={`Seat ${seat.seat_no} (${seat.type} - ${seat.tier})`}
-                          className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-xs font-semibold flex items-center justify-center transition-all ${
+                          className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
                             isSelected
-                              ? 'bg-indigo-600 text-white ring-2 ring-indigo-400 ring-offset-1 scale-105 shadow-sm'
+                              ? 'bg-blue-600 text-white ring-2 ring-blue-400 ring-offset-1 scale-105 shadow-xs'
                               : isBooked
-                              ? 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed line-through'
+                              ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 border border-slate-300 dark:border-slate-700 cursor-not-allowed line-through'
                               : isBusinessRow
-                              ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 hover:scale-105'
-                              : 'bg-white hover:bg-sky-50 text-slate-700 border border-slate-300 hover:border-sky-400 hover:scale-105'
+                              ? 'bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 hover:scale-105'
+                              : 'bg-white dark:bg-slate-900 hover:bg-sky-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:border-blue-400 hover:scale-105'
                           }`}
                         >
                           {isSelected ? (
@@ -280,7 +280,7 @@ export default function FlightSeatMapModal({ isOpen, onClose, transport, onBooki
                         {renderSeatButton(seatC)}
 
                         {/* Aisle Row Number */}
-                        <div className="text-[10px] font-mono font-bold text-slate-400 text-center select-none">
+                        <div className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 text-center select-none">
                           {rowNum}
                         </div>
 
@@ -292,7 +292,7 @@ export default function FlightSeatMapModal({ isOpen, onClose, transport, onBooki
                   })}
                 </div>
 
-                <div className="w-full text-center pt-3 text-[10px] text-slate-400">
+                <div className="w-full text-center pt-3 text-[10px] text-slate-400 dark:text-slate-500">
                   Rows 1-5: Business Tier • Rows 6-30: Economy Cabin
                 </div>
               </div>
@@ -303,47 +303,47 @@ export default function FlightSeatMapModal({ isOpen, onClose, transport, onBooki
           <div className="lg:col-span-4 flex flex-col justify-between space-y-4">
             <div className="space-y-4">
               {/* Selected Seat Card */}
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                   Selected Seat
                 </div>
                 {selectedSeat ? (
-                  <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-indigo-100 shadow-2xs">
+                  <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                      <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
                         {selectedSeat.seat_no}
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-slate-900 capitalize">
+                        <div className="text-sm font-bold text-slate-900 dark:text-white capitalize">
                           {selectedSeat.type} Seat
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
                           Row {selectedSeat.row} • {selectedSeat.tier} Class
                         </div>
                       </div>
                     </div>
                     <button
                       onClick={() => setSelectedSeat(null)}
-                      className="text-xs text-red-500 hover:text-red-700 font-medium"
+                      className="text-xs text-red-500 hover:text-red-700 font-medium cursor-pointer"
                     >
                       Clear
                     </button>
                   </div>
                 ) : (
-                  <div className="p-4 rounded-xl border border-dashed border-slate-300 text-center text-xs text-slate-400">
-                    <Armchair className="w-6 h-6 mx-auto mb-1 text-slate-300" />
+                  <div className="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-center text-xs text-slate-400 dark:text-slate-500">
+                    <Armchair className="w-6 h-6 mx-auto mb-1 text-slate-300 dark:text-slate-600" />
                     Click an available seat on the cabin map to select it.
                   </div>
                 )}
               </div>
 
               {/* Passenger Details Form */}
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                   Passenger Details
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Primary Passenger Name
                   </label>
                   <input
@@ -351,36 +351,36 @@ export default function FlightSeatMapModal({ isOpen, onClose, transport, onBooki
                     value={passengerName}
                     onChange={(e) => setPassengerName(e.target.value)}
                     placeholder="Enter full legal name"
-                    className="w-full px-3 py-2 text-xs bg-white rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <p className="text-[10px] text-slate-400 mt-1">
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
                     Must match government ID presented at airport security.
                   </p>
                 </div>
               </div>
 
               {/* Fare & Currency Breakdown */}
-              <div className="bg-indigo-50/70 rounded-2xl p-4 border border-indigo-100 space-y-2.5">
-                <div className="flex items-center justify-between text-xs text-slate-600">
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 space-y-2.5">
+                <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
                   <span>Base Airfare</span>
-                  <span className="font-semibold text-slate-800">{priceInfo.formatted}</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">{priceInfo.formatted}</span>
                 </div>
-                <div className="flex items-center justify-between text-xs text-slate-600">
+                <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
                   <span>Seat Reservation Fee</span>
-                  <span className="font-semibold text-emerald-600">Included (Free)</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">Included (Free)</span>
                 </div>
-                <div className="flex items-center justify-between text-xs text-slate-600">
+                <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
                   <span>Airport Taxes & Fees</span>
-                  <span className="font-semibold text-emerald-600">Included</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">Included</span>
                 </div>
-                <div className="border-t border-indigo-200/80 pt-2 flex items-baseline justify-between">
-                  <span className="font-bold text-xs text-slate-900">Total Payable</span>
+                <div className="border-t border-slate-200 dark:border-slate-700 pt-2 flex items-baseline justify-between">
+                  <span className="font-bold text-xs text-slate-900 dark:text-white">Total Payable</span>
                   <div className="text-right">
-                    <div className="font-extrabold text-lg text-indigo-700">
+                    <div className="font-extrabold text-lg text-blue-600 dark:text-blue-400">
                       {priceInfo.formatted}
                     </div>
                     {priceInfo.secondary && (
-                      <div className="text-[10px] text-slate-500">
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400">
                         {priceInfo.secondary}
                       </div>
                     )}
@@ -395,7 +395,7 @@ export default function FlightSeatMapModal({ isOpen, onClose, transport, onBooki
                 type="button"
                 disabled={isSubmitting || !selectedSeat}
                 onClick={handleConfirmReservation}
-                className="w-full py-3.5 px-4 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 disabled:opacity-50 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isSubmitting ? (
                   <>

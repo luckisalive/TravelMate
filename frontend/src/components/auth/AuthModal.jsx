@@ -51,33 +51,33 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 dark:border-slate-800 transition-colors">
         {/* Modal Header */}
-        <div className="p-6 bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-600 text-white relative">
+        <div className="p-6 bg-slate-900 dark:bg-slate-950 text-white relative border-b border-slate-800">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/20 transition-colors cursor-pointer"
+            className="absolute top-4 right-4 p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2 mb-2">
-            <Compass className="w-5 h-5" />
-            <span className="text-xs font-bold uppercase tracking-widest text-indigo-100">TravelMate</span>
+            <Compass className="w-5 h-5 text-blue-400" />
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-300">TravelMate</span>
           </div>
           <h2 className="text-2xl font-black tracking-tight">
             {mode === 'login' ? 'Welcome Back' : 'Create Your Account'}
           </h2>
-          <p className="text-indigo-100 text-xs mt-1">
+          <p className="text-slate-400 text-xs mt-1">
             {mode === 'login'
               ? 'Sign in to access your synchronized trips, bookings & expenses.'
               : 'Start planning trips, booking transport & splitting costs effortlessly.'}
           </p>
 
           {/* Toggle Switch */}
-          <div className="flex bg-black/20 backdrop-blur-xs p-1 rounded-xl mt-4">
+          <div className="flex bg-slate-800 p-1 rounded-xl mt-4 border border-slate-700">
             <button
               type="button"
               onClick={() => { setMode('login'); setError(null); }}
               className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                mode === 'login' ? 'bg-white text-violet-700 shadow-sm' : 'text-white/80 hover:text-white'
+                mode === 'login' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:text-white'
               }`}
             >
               Sign In
@@ -86,7 +86,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
               type="button"
               onClick={() => { setMode('register'); setError(null); }}
               className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                mode === 'register' ? 'bg-white text-violet-700 shadow-sm' : 'text-white/80 hover:text-white'
+                mode === 'register' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:text-white'
               }`}
             >
               Sign Up
@@ -116,7 +116,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                   placeholder="e.g. John Doe"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -134,7 +134,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -151,7 +151,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                 placeholder="At least 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -165,7 +165,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                 <select
                   value={currencyPref}
                   onChange={(e) => setCurrencyPref(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="INR">INR (₹)</option>
                   <option value="USD">USD ($)</option>
@@ -181,7 +181,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                 <select
                   value={travelStyle}
                   onChange={(e) => setTravelStyle(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="cheapest">Cheapest (Budget)</option>
                   <option value="balanced">Balanced</option>
@@ -194,7 +194,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-4 flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-md shadow-violet-500/25 transition-all cursor-pointer disabled:opacity-50"
+            className="w-full mt-4 flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50"
           >
             <span>{loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}</span>
             {!loading && <ArrowRight className="w-4 h-4" />}

@@ -108,28 +108,28 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
       }}
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
     >
-      <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full my-auto overflow-hidden border border-slate-100 flex flex-col max-h-[92vh]">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-5xl w-full my-auto overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="px-6 py-4.5 bg-gradient-to-r from-indigo-900 via-indigo-800 to-indigo-950 text-white flex items-center justify-between shrink-0">
+        <div className="px-6 py-4.5 bg-slate-900 dark:bg-slate-950 text-white flex items-center justify-between shrink-0 border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-700/60 rounded-xl">
-              <Calculator className="w-5 h-5 text-amber-300" />
+            <div className="p-2 bg-blue-600 rounded-xl text-white">
+              <Calculator className="w-5 h-5 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-base sm:text-lg">Trip Cost Estimator</h3>
-                <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-400/20 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-400/30">
+                <span className="text-[10px] uppercase font-bold tracking-widest bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-700">
                   Smart Forecast
                 </span>
               </div>
-              <p className="text-indigo-200 text-xs">
+              <p className="text-slate-400 text-xs">
                 Compare multi-package predictions (Cheapest, Balanced, Comfort) against trip budget
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-indigo-200 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors"
+            className="text-slate-400 hover:text-white p-1 rounded-full hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -140,18 +140,18 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
           {/* Controls Bar */}
           <form
             onSubmit={handleApplyParams}
-            className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-4"
+            className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
                   Destination City
                 </label>
                 <select
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   disabled={!!tripId}
-                  className="w-full text-xs bg-white text-slate-800 font-medium px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  className="w-full text-xs bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-medium px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="Goa">Goa</option>
                   <option value="Mumbai">Mumbai</option>
@@ -162,7 +162,7 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
                   Duration (Days)
                 </label>
                 <input
@@ -172,12 +172,12 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                   value={days}
                   onChange={(e) => setDays(e.target.value)}
                   disabled={!!tripId}
-                  className="w-full text-xs bg-white text-slate-800 font-medium px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  className="w-full text-xs bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-medium px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
                   Target Budget (INR)
                 </label>
                 <input
@@ -186,12 +186,12 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                   step="1000"
                   value={budget}
                   onChange={(e) => setBudget(e.target.value)}
-                  className="w-full text-xs bg-white text-slate-800 font-medium px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  className="w-full text-xs bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-medium px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
                   Origin (Optional)
                 </label>
                 <input
@@ -199,17 +199,17 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                   placeholder="e.g. BOM, DEL, BLR"
                   value={origin}
                   onChange={(e) => setOrigin(e.target.value)}
-                  className="w-full text-xs bg-white text-slate-800 font-medium px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 uppercase"
+                  className="w-full text-xs bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-medium px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
                 />
               </div>
             </div>
 
             {/* Allowance Customization Toggle */}
-            <div className="pt-2 border-t border-slate-200/60 flex flex-wrap items-center justify-between gap-2">
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-700/60 flex flex-wrap items-center justify-between gap-2">
               <button
                 type="button"
                 onClick={() => setShowCustomAllowances(!showCustomAllowances)}
-                className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1.5"
+                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold flex items-center gap-1.5 cursor-pointer"
               >
                 <Sliders className="w-3.5 h-3.5" />
                 {showCustomAllowances ? 'Hide Daily Allowances' : 'Customize Daily Allowances (Food, Local Transit, Activities)'}
@@ -218,7 +218,7 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 disabled:opacity-50"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
               >
                 {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Recalculate Estimates
@@ -226,32 +226,32 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
             </div>
 
             {showCustomAllowances && (
-              <div className="p-3 bg-white rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in fade-in">
+              <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in fade-in">
                 <div>
-                  <span className="text-[10px] text-slate-500 font-medium block">Cheapest Style Daily (₹)</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Cheapest Style Daily (₹)</span>
                   <input
                     type="number"
                     value={customAllowances.cheapest}
                     onChange={(e) => setCustomAllowances({ ...customAllowances, cheapest: e.target.value })}
-                    className="w-full text-xs p-1.5 border rounded-lg mt-1"
+                    className="w-full text-xs p-1.5 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-lg mt-1"
                   />
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-500 font-medium block">Balanced Style Daily (₹)</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Balanced Style Daily (₹)</span>
                   <input
                     type="number"
                     value={customAllowances.balanced}
                     onChange={(e) => setCustomAllowances({ ...customAllowances, balanced: e.target.value })}
-                    className="w-full text-xs p-1.5 border rounded-lg mt-1"
+                    className="w-full text-xs p-1.5 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-lg mt-1"
                   />
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-500 font-medium block">Comfort Style Daily (₹)</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Comfort Style Daily (₹)</span>
                   <input
                     type="number"
                     value={customAllowances.comfort}
                     onChange={(e) => setCustomAllowances({ ...customAllowances, comfort: e.target.value })}
-                    className="w-full text-xs p-1.5 border rounded-lg mt-1"
+                    className="w-full text-xs p-1.5 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-lg mt-1"
                   />
                 </div>
               </div>
@@ -261,7 +261,7 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
           {/* Loading or Error State */}
           {loading && (
             <div className="py-12 text-center text-slate-500 flex flex-col items-center justify-center gap-3">
-              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+              <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
               <p className="text-xs">Computing optimal packages over catalog fares and hotel rates...</p>
             </div>
           )}
@@ -289,18 +289,18 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                     key={styleKey}
                     className={`rounded-3xl border transition-all flex flex-col ${
                       isBalanced
-                        ? 'border-indigo-400/80 shadow-xl ring-2 ring-indigo-500/10 bg-gradient-to-b from-indigo-50/20 to-white'
-                        : 'border-slate-200/90 shadow-md bg-white'
+                        ? 'border-blue-500 dark:border-blue-600 shadow-lg ring-1 ring-blue-500/20 bg-white dark:bg-slate-900'
+                        : 'border-slate-200 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900'
                     }`}
                   >
                     {/* Package Badge Header */}
                     <div
                       className={`p-5 rounded-t-3xl border-b ${
                         isBalanced
-                          ? 'bg-indigo-600 text-white'
+                          ? 'bg-blue-600 text-white border-blue-600'
                           : isComfort
-                          ? 'bg-slate-900 text-white'
-                          : 'bg-emerald-600 text-white'
+                          ? 'bg-slate-900 dark:bg-slate-950 text-white border-slate-800'
+                          : 'bg-slate-800 text-white border-slate-700'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
@@ -308,7 +308,7 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                           {pkg.label}
                         </span>
                         {isBalanced && (
-                          <span className="bg-amber-400 text-slate-900 font-extrabold text-[10px] px-2 py-0.5 rounded-full uppercase">
+                          <span className="bg-white/20 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full uppercase">
                             Most Popular
                           </span>
                         )}
@@ -325,20 +325,20 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                     <div className="p-5 space-y-4 flex-1 text-xs">
                       {/* Stay Pick */}
                       <div className="space-y-1">
-                        <div className="flex items-center justify-between text-slate-500 font-semibold text-[11px]">
+                        <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 font-semibold text-[11px]">
                           <span className="flex items-center gap-1.5">
                             <Building className="w-3.5 h-3.5 text-slate-400" />
                             Accommodations ({pkg.breakdown.stay.nights} nights)
                           </span>
-                          <span className="text-slate-800 font-bold">
+                          <span className="text-slate-800 dark:text-slate-100 font-bold">
                             {formatWithHome(pkg.breakdown.stay.total, 'INR')}
                           </span>
                         </div>
-                        <div className="p-2.5 bg-slate-50 rounded-xl text-slate-700">
-                          <p className="font-semibold text-slate-900 truncate">
+                        <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-slate-700 dark:text-slate-300">
+                          <p className="font-semibold text-slate-900 dark:text-white truncate">
                             {pkg.hotel.name}
                           </p>
-                          <p className="text-[11px] text-slate-500">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
                             {formatWithHome(pkg.hotel.price_per_night, 'INR')} / night
                           </p>
                         </div>
@@ -346,20 +346,20 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
 
                       {/* Transit Pick */}
                       <div className="space-y-1">
-                        <div className="flex items-center justify-between text-slate-500 font-semibold text-[11px]">
+                        <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 font-semibold text-[11px]">
                           <span className="flex items-center gap-1.5">
                             <Plane className="w-3.5 h-3.5 text-slate-400" />
                             Transit (Round-trip)
                           </span>
-                          <span className="text-slate-800 font-bold">
+                          <span className="text-slate-800 dark:text-slate-100 font-bold">
                             {formatWithHome(pkg.breakdown.transport.total, 'INR')}
                           </span>
                         </div>
-                        <div className="p-2.5 bg-slate-50 rounded-xl text-slate-700">
-                          <p className="font-semibold text-slate-900 truncate">
+                        <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-slate-700 dark:text-slate-300">
+                          <p className="font-semibold text-slate-900 dark:text-white truncate">
                             {pkg.transport_outbound.operator ? `${pkg.transport_outbound.operator} ${pkg.transport_outbound.number}` : `${pkg.transport_outbound.mode} Transit`}
                           </p>
-                          <p className="text-[11px] text-slate-500">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
                             {pkg.transport_outbound.class ? `Class: ${pkg.transport_outbound.class}` : 'Scheduled corridor fare'}
                           </p>
                         </div>
@@ -367,20 +367,20 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
 
                       {/* Daily Allowance */}
                       <div className="space-y-1">
-                        <div className="flex items-center justify-between text-slate-500 font-semibold text-[11px]">
+                        <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 font-semibold text-[11px]">
                           <span className="flex items-center gap-1.5">
                             <Compass className="w-3.5 h-3.5 text-slate-400" />
                             Daily Allowance ({pkg.breakdown.allowance.days} days)
                           </span>
-                          <span className="text-slate-800 font-bold">
+                          <span className="text-slate-800 dark:text-slate-100 font-bold">
                             {formatWithHome(pkg.breakdown.allowance.total, 'INR')}
                           </span>
                         </div>
-                        <div className="p-2.5 bg-slate-50 rounded-xl text-slate-700">
-                          <p className="font-semibold text-slate-900">
+                        <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-slate-700 dark:text-slate-300">
+                          <p className="font-semibold text-slate-900 dark:text-white">
                             {formatWithHome(pkg.daily_allowance_rate, 'INR')} / day
                           </p>
-                          <p className="text-[11px] text-slate-500">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
                             Food, intra-city transit, and ticketed entries
                           </p>
                         </div>
@@ -388,10 +388,10 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                     </div>
 
                     {/* Budget Comparison Card */}
-                    <div className="p-5 border-t border-slate-100 bg-slate-50/60 rounded-b-3xl space-y-2.5">
+                    <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 rounded-b-3xl space-y-2.5">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-medium text-slate-500">vs Allocated Budget</span>
-                        <span className={`font-bold flex items-center gap-1 ${isOver ? 'text-rose-600' : 'text-emerald-600'}`}>
+                        <span className="font-medium text-slate-500 dark:text-slate-400">vs Allocated Budget</span>
+                        <span className={`font-bold flex items-center gap-1 ${isOver ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                           {isOver ? (
                             <>
                               <TrendingUp className="w-3.5 h-3.5" />
@@ -409,7 +409,7 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                       {/* Progress Bar */}
                       {budget > 0 && (
                         <div className="space-y-1">
-                          <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                          <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all ${
                                 isOver ? 'bg-rose-500' : 'bg-emerald-500'
@@ -425,7 +425,7 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
                       )}
 
                       {isOver && (
-                        <div className="p-2 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-[11px] flex items-center gap-1.5 font-medium">
+                        <div className="p-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-red-400 rounded-xl text-[11px] flex items-center gap-1.5 font-medium">
                           <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                           <span>Warning: Exceeds target budget.</span>
                         </div>
@@ -438,8 +438,8 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
           )}
 
           {/* Budget Forecast Notice */}
-          <div className="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex items-start gap-2.5 text-xs text-indigo-950">
-            <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+            <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
             <p className="leading-relaxed">
               <strong>Smart Budget Analysis:</strong> Predictions synthesize corridor transit fares, verified local accommodation price medians, and personalized daily activity allowances to generate comprehensive pre-trip forecasts.
             </p>

@@ -235,31 +235,31 @@ export default function ExpenseModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative animate-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 relative animate-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+          className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer"
           disabled={loading}
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-xs">
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs">
             <Receipt className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
               {initialExpense ? 'Edit Trip Expense' : 'Log Trip Expense'}
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Record payments, dining, activities, and split costs fairly among members.
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+          <div className="mb-4 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -268,7 +268,7 @@ export default function ExpenseModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Category Selection */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
               Expense Category
             </label>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -280,13 +280,13 @@ export default function ExpenseModal({
                     key={cat.id}
                     type="button"
                     onClick={() => setCategory(cat.id)}
-                    className={`p-2.5 rounded-2xl border text-center flex flex-col items-center gap-1.5 transition-all ${
+                    className={`p-2.5 rounded-2xl border text-center flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-indigo-600 bg-indigo-50/70 text-indigo-900 font-bold shadow-xs ring-2 ring-indigo-500/20'
-                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                        ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/40 text-blue-900 dark:text-blue-300 font-bold shadow-xs ring-2 ring-blue-500/20'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isSelected ? 'text-indigo-600' : 'text-slate-500'}`} />
+                    <Icon className={`w-4 h-4 ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'}`} />
                     <span className="text-[11px] leading-tight truncate w-full">{cat.label.split(' ')[0]}</span>
                   </button>
                 );
@@ -297,7 +297,7 @@ export default function ExpenseModal({
           {/* Amount & Currency */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Amount
               </label>
               <input
@@ -308,18 +308,18 @@ export default function ExpenseModal({
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
                 required
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Currency
               </label>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-white"
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {supportedCurrencies.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -332,9 +332,9 @@ export default function ExpenseModal({
 
           {/* Live Dual-Currency Preview */}
           {currency !== 'INR' && numAmount > 0 && (
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-center justify-between">
-              <span className="text-slate-500">Converted Base Value (INR):</span>
-              <span className="font-bold text-indigo-700 font-mono">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400">Converted Base Value (INR):</span>
+              <span className="font-bold text-blue-600 dark:text-blue-400 font-mono">
                 ≈ ₹{estimatedBaseINR.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
@@ -343,7 +343,7 @@ export default function ExpenseModal({
           {/* Date & Payer */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Expense Date
               </label>
               <div className="relative">
@@ -353,13 +353,13 @@ export default function ExpenseModal({
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Paid By
               </label>
               <div className="relative">
@@ -367,7 +367,7 @@ export default function ExpenseModal({
                 <select
                   value={paidBy}
                   onChange={(e) => setPaidBy(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-white"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value={user?.id}>{user?.name} (You)</option>
                   {allMembers
@@ -384,7 +384,7 @@ export default function ExpenseModal({
 
           {/* Note / Description */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
               Description / Notes
             </label>
             <div className="relative">
@@ -394,35 +394,35 @@ export default function ExpenseModal({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="e.g. Seafood dinner with team, taxi fare to fort"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 resize-none"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </div>
           </div>
 
           {/* SPLIT EXPENSE SECTION */}
-          <div className="pt-2 border-t border-slate-100">
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-indigo-600" />
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 <span>Split Allocation</span>
               </label>
 
               {splitType === 'equal' && numAmount > 0 && numSelected > 0 && (
-                <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-0.5 rounded-full">
                   {currency} {equalShare} / person
                 </span>
               )}
             </div>
 
             {/* Split Type Selector */}
-            <div className="grid grid-cols-3 gap-2 p-1 bg-slate-100 rounded-xl mb-3">
+            <div className="grid grid-cols-3 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-3">
               <button
                 type="button"
                 onClick={() => setSplitType('equal')}
-                className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                   splitType === 'equal'
-                    ? 'bg-white text-indigo-600 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 <Divide className="w-3.5 h-3.5" />
@@ -437,10 +437,10 @@ export default function ExpenseModal({
                     handleAutoDistributeRemaining();
                   }
                 }}
-                className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                   splitType === 'custom'
-                    ? 'bg-white text-indigo-600 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -450,10 +450,10 @@ export default function ExpenseModal({
               <button
                 type="button"
                 onClick={() => setSplitType('none')}
-                className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                   splitType === 'none'
-                    ? 'bg-white text-indigo-600 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 <User className="w-3.5 h-3.5" />
@@ -463,14 +463,14 @@ export default function ExpenseModal({
 
             {/* Split Type Content: EQUAL */}
             {splitType === 'equal' && (
-              <div className="space-y-2 bg-slate-50 p-3 rounded-2xl border border-slate-200/80">
-                <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+              <div className="space-y-2 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800">
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                   <span>Who was part of this expense?</span>
                   <div className="flex gap-2 text-[11px]">
                     <button
                       type="button"
                       onClick={() => setSelectedMemberIds(allMembers.map((m) => m.user_id))}
-                      className="text-indigo-600 hover:underline font-semibold"
+                      className="text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
                     >
                       Select All
                     </button>
@@ -478,7 +478,7 @@ export default function ExpenseModal({
                     <button
                       type="button"
                       onClick={() => setSelectedMemberIds([parseInt(paidBy || user?.id, 10)])}
-                      className="text-slate-500 hover:underline"
+                      className="text-slate-500 dark:text-slate-400 hover:underline cursor-pointer"
                     >
                       Payer Only
                     </button>
@@ -494,14 +494,14 @@ export default function ExpenseModal({
                         onClick={() => toggleMemberSelection(m.user_id)}
                         className={`flex items-center justify-between p-2 rounded-xl border text-xs cursor-pointer select-none transition-all ${
                           isSelected
-                            ? 'bg-white border-indigo-200 text-slate-800 shadow-2xs font-semibold'
-                            : 'bg-slate-100/60 border-transparent text-slate-400 hover:bg-slate-100'
+                            ? 'bg-white dark:bg-slate-900 border-blue-200 dark:border-blue-800 text-slate-800 dark:text-slate-100 shadow-2xs font-semibold'
+                            : 'bg-slate-100/60 dark:bg-slate-800/60 border-transparent text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                         }`}
                       >
                         <div className="flex items-center gap-2 truncate">
                           <div
                             className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0 font-bold ${
-                              isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'
+                              isSelected ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
                             }`}
                           >
                             {isSelected ? <Check className="w-3 h-3" /> : m.name.charAt(0)}
@@ -509,7 +509,7 @@ export default function ExpenseModal({
                           <span className="truncate">{m.name}</span>
                         </div>
                         {isSelected && numAmount > 0 && (
-                          <span className="text-slate-500 text-[11px] font-mono">
+                          <span className="text-slate-500 dark:text-slate-400 text-[11px] font-mono">
                             {currency} {equalShare}
                           </span>
                         )}
@@ -522,13 +522,13 @@ export default function ExpenseModal({
 
             {/* Split Type Content: CUSTOM */}
             {splitType === 'custom' && (
-              <div className="space-y-2 bg-slate-50 p-3 rounded-2xl border border-slate-200/80">
+              <div className="space-y-2 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800">
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-slate-500">Custom breakdown per member:</span>
+                  <span className="text-slate-500 dark:text-slate-400">Custom breakdown per member:</span>
                   <button
                     type="button"
                     onClick={handleAutoDistributeRemaining}
-                    className="text-xs text-indigo-600 hover:underline font-semibold"
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
                   >
                     Distribute Evenly
                   </button>
@@ -536,9 +536,9 @@ export default function ExpenseModal({
 
                 <div className="space-y-2">
                   {allMembers.map((m) => (
-                    <div key={m.user_id} className="flex items-center justify-between gap-3 bg-white p-2 rounded-xl border border-slate-200/80">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 truncate">
-                        <div className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] shrink-0 font-bold">
+                    <div key={m.user_id} className="flex items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
+                        <div className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-[10px] shrink-0 font-bold">
                           {m.name.charAt(0)}
                         </div>
                         <span className="truncate">{m.name}</span>
@@ -552,7 +552,7 @@ export default function ExpenseModal({
                           value={customSplits[m.user_id] ?? ''}
                           onChange={(e) => handleCustomAmountChange(m.user_id, e.target.value)}
                           placeholder="0.00"
-                          className="w-24 px-2 py-1 rounded-lg border border-slate-200 text-xs font-mono font-bold text-right focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="w-24 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-xs font-mono font-bold text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                       </div>
                     </div>
@@ -561,17 +561,17 @@ export default function ExpenseModal({
 
                 {/* Remaining Balance Tracker */}
                 <div className="pt-2 flex items-center justify-between text-xs font-semibold">
-                  <span className="text-slate-500">Allocation Balance:</span>
+                  <span className="text-slate-500 dark:text-slate-400">Allocation Balance:</span>
                   {Math.abs(customRemaining) <= 0.05 ? (
-                    <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full flex items-center gap-1">
                       <Check className="w-3 h-3" /> Exact Match ({currency} {numAmount.toFixed(2)})
                     </span>
                   ) : customRemaining > 0 ? (
-                    <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+                    <span className="text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-full">
                       {currency} {customRemaining.toFixed(2)} remaining to allocate
                     </span>
                   ) : (
-                    <span className="text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">
+                    <span className="text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-full">
                       Exceeds total by {currency} {Math.abs(customRemaining).toFixed(2)}
                     </span>
                   )}
@@ -581,7 +581,7 @@ export default function ExpenseModal({
 
             {/* Split Type Content: PERSONAL */}
             {splitType === 'none' && (
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-500 flex items-center gap-2">
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
                 <UserCheck className="w-4 h-4 text-slate-400 shrink-0" />
                 <span>This expense will be treated as personal for the payer only. No group debts will be created.</span>
               </div>
@@ -594,14 +594,14 @@ export default function ExpenseModal({
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
+              className="px-5 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+              className="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
             >
               {loading ? 'Saving...' : initialExpense ? 'Update Expense' : 'Log Expense'}
             </button>

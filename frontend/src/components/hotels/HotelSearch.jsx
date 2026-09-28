@@ -116,14 +116,14 @@ export default function HotelSearch({ onOpenAuth }) {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Top Banner & Navigation Sub-Tabs */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-slate-900 dark:bg-slate-900 rounded-3xl p-6 sm:p-8 text-white border border-slate-800 shadow-xs relative">
         <div className="relative z-10 max-w-3xl space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 backdrop-blur-sm">
-              <Building2 className="w-3.5 h-3.5" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-950/80 text-blue-300 border border-blue-800/70">
+              <Building2 className="w-3.5 h-3.5 text-blue-400" />
               Verified OpenStreetMap Stays
             </span>
-            <span className="text-xs text-slate-300">
+            <span className="text-xs text-slate-400">
               Live Currency Sync & Verified Partner Properties
             </span>
           </div>
@@ -139,10 +139,10 @@ export default function HotelSearch({ onOpenAuth }) {
           <div className="flex items-center gap-2 pt-2">
             <button
               onClick={() => setSubTab('search')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 subTab === 'search'
-                  ? 'bg-white text-indigo-900 shadow-md'
-                  : 'bg-white/10 hover:bg-white/20 text-white'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-slate-800 hover:bg-slate-750 text-slate-300'
               }`}
             >
               <Search className="w-3.5 h-3.5" />
@@ -152,10 +152,10 @@ export default function HotelSearch({ onOpenAuth }) {
             {user && (
               <button
                 onClick={() => setSubTab('bookings')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                   subTab === 'bookings'
-                    ? 'bg-white text-indigo-900 shadow-md'
-                    : 'bg-white/10 hover:bg-white/20 text-white'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-slate-800 hover:bg-slate-750 text-slate-300'
                 }`}
               >
                 <CalendarCheck className="w-3.5 h-3.5" />
@@ -164,9 +164,6 @@ export default function HotelSearch({ onOpenAuth }) {
             )}
           </div>
         </div>
-
-        {/* Ambient Decorative Light */}
-        <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
       </div>
 
       {subTab === 'bookings' ? (
@@ -181,10 +178,10 @@ export default function HotelSearch({ onOpenAuth }) {
                 setCity('');
                 setPage(1);
               }}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+              className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                 city === ''
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
               }`}
             >
               All Destinations
@@ -196,13 +193,13 @@ export default function HotelSearch({ onOpenAuth }) {
                   setCity(c.city);
                   setPage(1);
                 }}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer ${
                   city.toLowerCase() === c.city.toLowerCase()
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                    ? 'bg-blue-600 text-white shadow-xs'
                     : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
                 }`}
               >
-                <MapPin className="w-3 h-3 text-indigo-400" />
+                <MapPin className="w-3 h-3 text-blue-400" />
                 <span>{c.city}</span>
                 <span className="text-[10px] opacity-75 font-mono">({c.count})</span>
               </button>
@@ -210,7 +207,7 @@ export default function HotelSearch({ onOpenAuth }) {
           </div>
 
           {/* Search & Filter Bar */}
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
             <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-12 gap-3">
               {/* Keyword Search */}
               <div className="sm:col-span-6 relative">
@@ -220,7 +217,7 @@ export default function HotelSearch({ onOpenAuth }) {
                   placeholder="Search by hotel name or landmark..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-800"
                 />
               </div>
 
@@ -232,7 +229,7 @@ export default function HotelSearch({ onOpenAuth }) {
                     setSortBy(e.target.value);
                     setPage(1);
                   }}
-                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="recommended">Recommended (Top Pick)</option>
                   <option value="price_asc">Price: Low to High</option>
@@ -246,7 +243,7 @@ export default function HotelSearch({ onOpenAuth }) {
               <div className="sm:col-span-3 flex items-center gap-2">
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors cursor-pointer"
+                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
                 >
                   Search Stays
                 </button>
@@ -268,7 +265,7 @@ export default function HotelSearch({ onOpenAuth }) {
                 <div className="space-y-2">
                   <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-200">
                     <span>Max Price per Night</span>
-                    <span className="text-indigo-600 dark:text-cyan-400 font-bold font-mono">
+                    <span className="text-blue-600 dark:text-blue-400 font-bold font-mono">
                       {formatPrice(maxPrice).fullDisplay}
                     </span>
                   </div>
@@ -282,7 +279,7 @@ export default function HotelSearch({ onOpenAuth }) {
                       setMaxPrice(parseInt(e.target.value, 10));
                       setPage(1);
                     }}
-                    className="w-full accent-indigo-600 dark:accent-cyan-400"
+                    className="w-full accent-blue-600 dark:accent-blue-500"
                   />
                   <div className="flex justify-between text-[10px] text-slate-400">
                     <span>₹1,500</span>
@@ -309,7 +306,7 @@ export default function HotelSearch({ onOpenAuth }) {
                         }}
                         className={`flex-1 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
                           minStars === s.val
-                            ? 'bg-indigo-600 text-white shadow-sm'
+                            ? 'bg-blue-600 text-white shadow-xs'
                             : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
                         }`}
                       >
@@ -339,7 +336,7 @@ export default function HotelSearch({ onOpenAuth }) {
                         }}
                         className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer ${
                           travelStyle === st.key
-                            ? 'bg-indigo-600 text-white shadow-sm'
+                            ? 'bg-blue-600 text-white shadow-xs'
                             : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
                         }`}
                       >
@@ -370,11 +367,11 @@ export default function HotelSearch({ onOpenAuth }) {
               Showing <span className="font-bold text-slate-800 dark:text-slate-200">{hotels.length}</span> of{' '}
               <span className="font-bold text-slate-800 dark:text-slate-200">{pagination.total}</span> verified stays
               {city && (
-                <span> in <strong className="text-indigo-600 dark:text-cyan-400">{city}</strong></span>
+                <span> in <strong className="text-blue-600 dark:text-blue-400">{city}</strong></span>
               )}
             </div>
             {sortBy === 'recommended' && (
-              <span className="flex items-center gap-1 text-indigo-600 dark:text-cyan-400 font-semibold bg-indigo-50 dark:bg-slate-800 px-2.5 py-0.5 rounded-full border border-indigo-100 dark:border-slate-700">
+              <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-semibold bg-blue-50 dark:bg-slate-800 px-2.5 py-0.5 rounded-full border border-blue-100 dark:border-slate-700">
                 <Sparkles className="w-3 h-3" />
                 Ranked by {travelStyle.toUpperCase()} preference
               </span>
@@ -440,7 +437,7 @@ export default function HotelSearch({ onOpenAuth }) {
                     onClick={() => setPage(i + 1)}
                     className={`w-8 h-8 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                       page === i + 1
-                        ? 'bg-indigo-600 text-white shadow-sm'
+                        ? 'bg-blue-600 text-white shadow-xs'
                         : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
                     }`}
                   >
@@ -452,7 +449,7 @@ export default function HotelSearch({ onOpenAuth }) {
               <button
                 onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
                 disabled={page >= pagination.totalPages}
-                className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700"
+                className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700 dark:text-slate-300"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

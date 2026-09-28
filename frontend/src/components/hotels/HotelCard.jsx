@@ -37,9 +37,9 @@ export default function HotelCard({ hotel, onSelect, onBook }) {
   ];
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col group">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col group">
       {/* Thumbnail & Badges */}
-      <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
+      <div className="relative aspect-video w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
         <img
           src={imgSrc}
           alt={hotel.name}
@@ -58,7 +58,7 @@ export default function HotelCard({ hotel, onSelect, onBook }) {
 
         {/* Recommendation Badge if available */}
         {hotel.recommendation_reason && (
-          <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-600/90 backdrop-blur-md text-white text-xs font-semibold shadow-md">
+          <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-600/90 backdrop-blur-md text-white text-xs font-semibold shadow-xs">
             <Sparkles className="w-3 h-3 text-amber-300" />
             <span className="truncate max-w-[130px]">{hotel.recommendation_reason}</span>
           </div>
@@ -84,14 +84,14 @@ export default function HotelCard({ hotel, onSelect, onBook }) {
                       ? 'fill-amber-400 text-amber-400'
                       : i < hotel.stars
                       ? 'fill-amber-400/50 text-amber-400'
-                      : 'text-slate-300'
+                      : 'text-slate-300 dark:text-slate-600'
                   }`}
                 />
               ))}
-              <span className="ml-1 text-slate-600 font-medium">{hotel.stars.toFixed(1)} Star</span>
+              <span className="ml-1 text-slate-600 dark:text-slate-400 font-medium">{hotel.stars.toFixed(1)} Star</span>
             </div>
 
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200/60">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800">
               ★ {hotel.rating.toFixed(1)} / 5.0
             </span>
           </div>
@@ -99,7 +99,7 @@ export default function HotelCard({ hotel, onSelect, onBook }) {
           {/* Hotel Name */}
           <h3 
             onClick={() => onSelect(hotel)}
-            className="font-bold text-slate-900 text-base leading-snug hover:text-indigo-600 cursor-pointer line-clamp-1 transition-colors"
+            className="font-bold text-slate-900 dark:text-white text-base leading-snug hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer line-clamp-1 transition-colors"
             title={hotel.name}
           >
             {hotel.name}
@@ -111,13 +111,13 @@ export default function HotelCard({ hotel, onSelect, onBook }) {
               {hotel.amenities.slice(0, 3).map((amenity, idx) => (
                 <span
                   key={idx}
-                  className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium"
+                  className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium"
                 >
                   {amenity}
                 </span>
               ))}
               {hotel.amenities.length > 3 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-400">
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500">
                   +{hotel.amenities.length - 3} more
                 </span>
               )}
@@ -126,20 +126,20 @@ export default function HotelCard({ hotel, onSelect, onBook }) {
         </div>
 
         {/* Pricing & Actions Section */}
-        <div className="mt-5 pt-4 border-t border-slate-100">
+        <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-baseline justify-between mb-3">
             <div>
-              <span className="text-xs text-slate-500 block leading-none mb-1">
+              <span className="text-xs text-slate-500 dark:text-slate-400 block leading-none mb-1">
                 Estimate per night
               </span>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-extrabold text-slate-900">
+                <span className="text-xl font-extrabold text-slate-900 dark:text-white">
                   {priceInfo.isConverted ? `≈ ${priceInfo.formatted}` : priceInfo.formatted}
                 </span>
-                <span className="text-xs text-slate-500">/ night</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">/ night</span>
               </div>
               {priceInfo.isConverted && (
-                <div className="text-[11px] text-slate-500 font-mono">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                   Base: {priceInfo.homeFormatted}
                 </div>
               )}
@@ -150,7 +150,7 @@ export default function HotelCard({ hotel, onSelect, onBook }) {
               <button
                 type="button"
                 onClick={() => setShowOutbound(!showOutbound)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-colors"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-colors"
                 title="Compare on real travel websites"
               >
                 <span>Live Rates</span>
@@ -164,8 +164,8 @@ export default function HotelCard({ hotel, onSelect, onBook }) {
                     className="fixed inset-0 z-20" 
                     onClick={() => setShowOutbound(false)}
                   />
-                  <div className="absolute right-0 bottom-full mb-2 w-52 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150">
-                    <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                  <div className="absolute right-0 bottom-full mb-2 w-52 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                       Check Real Listings
                     </div>
                     {outboundLinks.map((link) => (
@@ -175,10 +175,10 @@ export default function HotelCard({ hotel, onSelect, onBook }) {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => setShowOutbound(false)}
-                        className="flex items-center justify-between px-3 py-2 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                        className="flex items-center justify-between px-3 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
                       >
                         <span className="font-medium">{link.name}</span>
-                        <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                           {link.badge}
                         </span>
                       </a>
@@ -193,13 +193,13 @@ export default function HotelCard({ hotel, onSelect, onBook }) {
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => onSelect(hotel)}
-              className="w-full py-2 px-3 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+              className="w-full py-2 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
             >
               Details
             </button>
             <button
               onClick={() => onBook(hotel)}
-              className="w-full py-2 px-3 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm shadow-indigo-200 transition-colors flex items-center justify-center gap-1.5"
+              className="w-full py-2 px-3 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <span>Book Stay</span>
             </button>

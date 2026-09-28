@@ -44,21 +44,21 @@ export function ToastProvider({ children }) {
         return <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />;
       case 'info':
       default:
-        return <Info className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />;
+        return <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />;
     }
   };
 
   const getBorderColor = (type) => {
     switch (type) {
       case 'success':
-        return 'border-emerald-200 bg-white shadow-emerald-100';
+        return 'border-emerald-200 dark:border-emerald-800/60 bg-white dark:bg-slate-900 shadow-slate-200/50 dark:shadow-slate-950/50';
       case 'error':
-        return 'border-rose-200 bg-white shadow-rose-100';
+        return 'border-rose-200 dark:border-rose-800/60 bg-white dark:bg-slate-900 shadow-slate-200/50 dark:shadow-slate-950/50';
       case 'warning':
-        return 'border-amber-200 bg-white shadow-amber-100';
+        return 'border-amber-200 dark:border-amber-800/60 bg-white dark:bg-slate-900 shadow-slate-200/50 dark:shadow-slate-950/50';
       case 'info':
       default:
-        return 'border-indigo-200 bg-white shadow-indigo-100';
+        return 'border-blue-200 dark:border-blue-800/60 bg-white dark:bg-slate-900 shadow-slate-200/50 dark:shadow-slate-950/50';
     }
   };
 
@@ -80,18 +80,18 @@ export function ToastProvider({ children }) {
           >
             {getToastIcon(t.type)}
             <div className="flex-1 min-w-0">
-              <h5 className="text-xs sm:text-sm font-bold text-slate-800 leading-tight">
+              <h5 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">
                 {t.message}
               </h5>
               {t.description && (
-                <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-relaxed">
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
                   {t.description}
                 </p>
               )}
             </div>
             <button
               onClick={() => removeToast(t.id)}
-              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
               aria-label="Dismiss notification"
             >
               <X className="w-4 h-4" />

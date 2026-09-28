@@ -18,7 +18,7 @@ export default function Footer({ onNavigateTab }) {
           {/* Col 1: Brand & Mission */}
           <div className="space-y-3 md:col-span-4">
             <div className="flex items-center gap-2.5 text-white">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-md">
+              <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs">
                 <Compass className="w-5 h-5" />
               </div>
               <span className="font-extrabold text-base tracking-tight text-white">
@@ -29,8 +29,8 @@ export default function Footer({ onNavigateTab }) {
               The modern travel platform for coordinating group trips, booking transit and curated stays, tracking live multi-currency expenses, and settling balances with zero friction.
             </p>
             <div className="pt-1">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-950/80 text-indigo-300 border border-indigo-800/70">
-                <ShieldCheck className="w-3 h-3 text-cyan-400" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                <ShieldCheck className="w-3 h-3 text-blue-400" />
                 Verified Travel & Expense Platform
               </span>
             </div>
@@ -93,7 +93,7 @@ export default function Footer({ onNavigateTab }) {
           {/* Col 3: Open Data Attributions & Licensure */}
           <div className="space-y-3 md:col-span-5">
             <div className="flex items-center gap-1.5 text-white font-bold text-xs uppercase tracking-wider">
-              <Database className="w-3.5 h-3.5 text-indigo-400" />
+              <Database className="w-3.5 h-3.5 text-blue-400" />
               <span>Open Data Attributions & Licensure</span>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed">
@@ -111,7 +111,7 @@ export default function Footer({ onNavigateTab }) {
                     href="https://www.openstreetmap.org/copyright"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-indigo-400 hover:text-indigo-300 flex items-center gap-0.5 text-[10px]"
+                    className="text-blue-400 hover:text-blue-300 flex items-center gap-0.5 text-[10px]"
                   >
                     <span>ODbL</span>
                     <ExternalLink className="w-2.5 h-2.5" />
@@ -130,7 +130,7 @@ export default function Footer({ onNavigateTab }) {
                     href="https://ourairports.com/data/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-indigo-400 hover:text-indigo-300 flex items-center gap-0.5 text-[10px]"
+                    className="text-blue-400 hover:text-blue-300 flex items-center gap-0.5 text-[10px]"
                   >
                     <span>Public Domain</span>
                     <ExternalLink className="w-2.5 h-2.5" />
@@ -149,7 +149,7 @@ export default function Footer({ onNavigateTab }) {
                     href="https://openflights.org/data.html"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-indigo-400 hover:text-indigo-300 flex items-center gap-0.5 text-[10px]"
+                    className="text-blue-400 hover:text-blue-300 flex items-center gap-0.5 text-[10px]"
                   >
                     <span>ODbL / CC-BY</span>
                     <ExternalLink className="w-2.5 h-2.5" />
@@ -168,7 +168,7 @@ export default function Footer({ onNavigateTab }) {
                     href="https://www.frankfurter.app/docs/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-indigo-400 hover:text-indigo-300 flex items-center gap-0.5 text-[10px]"
+                    className="text-blue-400 hover:text-blue-300 flex items-center gap-0.5 text-[10px]"
                   >
                     <span>ECB Open Data</span>
                     <ExternalLink className="w-2.5 h-2.5" />
