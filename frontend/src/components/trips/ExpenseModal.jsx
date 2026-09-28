@@ -15,7 +15,6 @@ import {
   Users,
   Divide,
   UserCheck,
-  Percent,
   SlidersHorizontal,
   Check
 } from 'lucide-react';
@@ -400,7 +399,7 @@ export default function ExpenseModal({
             </div>
           </div>
 
-          {/* SPLIT EXPENSE SECTION (Phase 7) */}
+          {/* SPLIT EXPENSE SECTION */}
           <div className="pt-2 border-t border-slate-100">
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">

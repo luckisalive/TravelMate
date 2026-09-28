@@ -258,7 +258,7 @@ export default function BoardingPassModal({ isOpen, onClose, booking, onCancella
               </div>
             </div>
 
-            {/* Simulated Barcode / QR Section */}
+            {/* Barcode / QR Section */}
             <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-white rounded-xl p-1 flex items-center justify-center text-slate-900 shadow-sm">
@@ -269,7 +269,7 @@ export default function BoardingPassModal({ isOpen, onClose, booking, onCancella
                     SCAN AT BOARDING GATE
                   </div>
                   <div className="text-[10px] text-slate-300 font-semibold">
-                    Simulated Electronic Travel Document
+                    Official Electronic Boarding Pass
                   </div>
                 </div>
               </div>

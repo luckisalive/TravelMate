@@ -725,7 +725,7 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
               </div>
             ) : (
               <EmptyState
-                icon={Receipt}
+                showIllustration={true}
                 badge={searchQuery || categoryFilter !== 'ALL' ? 'No Matches' : 'No Expenses'}
                 title={searchQuery || categoryFilter !== 'ALL' ? 'No matching expenses found' : 'No expenses recorded yet'}
                 description={
@@ -801,7 +801,7 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
               </div>
             ) : (
               <EmptyState
-                icon={Hotel}
+                showIllustration={true}
                 badge="Pre-paid Bookings"
                 title="No bookings linked to this trip"
                 description="When you reserve verified hotels, flights, or trains, you can link them to this trip to automatically track reservations against your budget."
@@ -884,7 +884,7 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
           </div>
         )}
 
-        {/* SUBTAB 4: BALANCES & DEBT (Phase 7) */}
+        {/* SUBTAB 4: BALANCES & DEBT */}
         {activeSubTab === 'balances' && (
           <TripBalancesView
             tripId={tripId}
@@ -893,7 +893,7 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
           />
         )}
 
-        {/* SUBTAB 5: DAY-WISE ITINERARY (Phase 8) */}
+        {/* SUBTAB 5: DAY-WISE ITINERARY */}
         {activeSubTab === 'itinerary' && (
           <ItineraryView tripId={tripId} />
         )}

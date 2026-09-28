@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CurrencyProvider } from './context/CurrencyContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import AuthModal from './components/auth/AuthModal';
@@ -11,6 +12,13 @@ import MyBookingsView from './components/hotels/MyBookingsView';
 import TripsListView from './components/trips/TripsListView';
 import TripDetailView from './components/trips/TripDetailView';
 import CostEstimatorModal from './components/estimator/CostEstimatorModal';
+import TravelHeroIllustration from './components/illustrations/TravelHeroIllustration';
+import { 
+  TransportIllustration, 
+  ExpenseIllustration, 
+  HotelIllustration, 
+  EstimatorIllustration 
+} from './components/illustrations/FeatureIllustrations';
 import { ToastProvider } from './context/ToastContext';
 import { Analytics } from '@vercel/analytics/react';
 import { 
@@ -20,7 +28,6 @@ import {
   Users, 
   Sparkles, 
   ArrowRight, 
-  MapPin, 
   CheckCircle2, 
   ArrowUpRight, 
   Ticket, 
@@ -29,14 +36,79 @@ import {
   Calculator
 } from 'lucide-react';
 
+function parseUrlState() {
+  if (typeof window === 'undefined') return { tab: 'home', tripId: null };
+  const params = new URLSearchParams(window.location.search);
+  const tabParam = params.get('tab');
+  const tripParam = params.get('tripId');
+  const hash = window.location.hash.replace('#', '');
+  const validTabs = ['home', 'trips', 'hotels', 'transport', 'bookings', 'expenses'];
+
+  const tab = validTabs.includes(tabParam)
+    ? tabParam
+    : validTabs.includes(hash)
+    ? hash
+    : 'home';
+
+  const tripId = tripParam ? parseInt(tripParam, 10) : null;
+  return { tab, tripId };
+}
+
 function MainContent() {
   const { user } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [profileModalOpen, setProfileModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('home');
-  const [selectedTripId, setSelectedTripId] = useState(null);
+
+  // Initialize activeTab & selectedTripId from URL query or hash
+  const initial = parseUrlState();
+  const [activeTab, setActiveTab] = useState(initial.tab);
+  const [selectedTripId, setSelectedTripId] = useState(initial.tripId);
   const [estimatorModalOpen, setEstimatorModalOpen] = useState(false);
+
+  // Navigate function that logs history entries for browser back/forward buttons
+  const navigateTo = (tab, tripId = null, push = true) => {
+    setActiveTab(tab);
+    setSelectedTripId(tripId);
+
+    const params = new URLSearchParams();
+    if (tab && tab !== 'home') {
+      params.set('tab', tab);
+    }
+    if (tripId) {
+      params.set('tripId', tripId.toString());
+    }
+
+    const query = params.toString();
+    const newUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+
+    if (push) {
+      window.history.pushState({ tab, tripId }, '', newUrl);
+    } else {
+      window.history.replaceState({ tab, tripId }, '', newUrl);
+    }
+  };
+
+  // Listen to browser Back / Forward (popstate)
+  useEffect(() => {
+    // Record initial page state in window.history
+    const current = parseUrlState();
+    window.history.replaceState(current, '', window.location.href);
+
+    const onPopState = (e) => {
+      if (e.state && e.state.tab !== undefined) {
+        setActiveTab(e.state.tab || 'home');
+        setSelectedTripId(e.state.tripId || null);
+      } else {
+        const parsed = parseUrlState();
+        setActiveTab(parsed.tab);
+        setSelectedTripId(parsed.tripId);
+      }
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   const openAuth = (mode) => {
     setAuthMode(mode);
@@ -44,21 +116,17 @@ function MainContent() {
   };
 
   const handleSelectTrip = (id) => {
-    setSelectedTripId(id);
-    setActiveTab('trips');
+    navigateTo('trips', id);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors">
       <Navbar
         onOpenAuth={openAuth}
         onOpenProfile={() => setProfileModalOpen(true)}
         activeTab={activeTab}
         setActiveTab={(tab) => {
-          setActiveTab(tab);
-          if (tab !== 'trips' && tab !== 'expenses') {
-            setSelectedTripId(null);
-          }
+          navigateTo(tab, null);
         }}
       />
 
@@ -67,51 +135,51 @@ function MainContent() {
         {activeTab === 'hotels' ? (
           <HotelSearch 
             onOpenAuth={openAuth} 
-            onOpenMyBookings={() => setActiveTab('bookings')} 
+            onOpenMyBookings={() => navigateTo('bookings')} 
           />
         ) : activeTab === 'transport' ? (
           <TransportSearch 
             onOpenAuth={openAuth} 
-            onOpenMyBookings={() => setActiveTab('bookings')} 
+            onOpenMyBookings={() => navigateTo('bookings')} 
           />
         ) : activeTab === 'bookings' ? (
           <MyBookingsView 
-            onExploreHotels={() => setActiveTab('hotels')}
-            onExploreTransport={() => setActiveTab('transport')}
+            onExploreHotels={() => navigateTo('hotels')}
+            onExploreTransport={() => navigateTo('transport')}
           />
         ) : activeTab === 'trips' || activeTab === 'expenses' ? (
           user ? (
             selectedTripId ? (
               <TripDetailView
                 tripId={selectedTripId}
-                onBack={() => setSelectedTripId(null)}
-                onNavigateToBookings={() => setActiveTab('bookings')}
+                onBack={() => navigateTo('trips', null)}
+                onNavigateToBookings={() => navigateTo('bookings')}
               />
             ) : (
               <TripsListView
-                onSelectTrip={(id) => setSelectedTripId(id)}
-                onExploreBookings={() => setActiveTab('bookings')}
+                onSelectTrip={handleSelectTrip}
+                onExploreBookings={() => navigateTo('bookings')}
               />
             )
           ) : (
-            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 max-w-md mx-auto space-y-4 shadow-sm my-12 animate-in fade-in">
-              <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto shadow-xs">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-800 max-w-md mx-auto space-y-4 shadow-sm my-12 animate-in fade-in">
+              <div className="w-16 h-16 rounded-3xl bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-cyan-400 flex items-center justify-center mx-auto shadow-xs">
                 <Lock className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900">Sign in to Access Trips & Expenses</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Create trips, set spending budgets, record multi-currency expenses, and view interactive Recharts financial analytics.
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Sign in to Access Trips & Expenses</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Create trips, set spending budgets, record multi-currency expenses, and view interactive financial analytics.
               </p>
               <div className="flex items-center justify-center gap-3 pt-2">
                 <button
                   onClick={() => openAuth('login')}
-                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
                 >
                   Sign In
                 </button>
                 <button
                   onClick={() => openAuth('register')}
-                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
                 >
                   Create Free Account
                 </button>
@@ -122,11 +190,11 @@ function MainContent() {
           /* Logged In Dashboard View */
           <div className="space-y-8 animate-in fade-in duration-300">
             {/* Welcome Banner */}
-            <div className="bg-gradient-to-r from-indigo-700 via-sky-700 to-indigo-900 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
+            <div className="bg-gradient-to-r from-violet-700 via-indigo-700 to-cyan-800 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
               <div className="relative z-10 max-w-2xl">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-indigo-100 backdrop-blur-sm mb-3">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Travel Preference: {user.travel_style.toUpperCase()}
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-cyan-100 backdrop-blur-sm mb-3">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  Travel Style: {user.travel_style.toUpperCase()}
                 </span>
                 <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
                   Welcome, {user.name}!
@@ -137,35 +205,32 @@ function MainContent() {
 
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <button 
-                    onClick={() => {
-                      setSelectedTripId(null);
-                      setActiveTab('trips');
-                    }}
-                    className="px-5 py-2.5 bg-white text-indigo-700 hover:bg-indigo-50 font-semibold text-sm rounded-xl shadow-md transition-colors flex items-center gap-2 cursor-pointer"
+                    onClick={() => navigateTo('trips', null)}
+                    className="px-5 py-2.5 bg-white text-violet-800 hover:bg-violet-50 font-semibold text-sm rounded-xl shadow-md transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <Wallet className="w-4 h-4" />
                     <span>My Trips & Expenses</span>
                   </button>
                   <button 
-                    onClick={() => setActiveTab('transport')}
+                    onClick={() => navigateTo('transport')}
                     className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-medium text-sm rounded-xl border border-white/20 backdrop-blur-sm transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <Plane className="w-4 h-4" />
                     <span>Search Flights & Trains</span>
                   </button>
                   <button 
-                    onClick={() => setActiveTab('hotels')}
+                    onClick={() => navigateTo('hotels')}
                     className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-medium text-sm rounded-xl border border-white/20 backdrop-blur-sm transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <Building2 className="w-4 h-4" />
                     <span>Browse Hotels</span>
                   </button>
                   <button 
-                    onClick={() => setActiveTab('bookings')}
+                    onClick={() => navigateTo('bookings')}
                     className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-medium text-sm rounded-xl border border-white/20 backdrop-blur-sm transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <Ticket className="w-4 h-4" />
-                    <span>My Bookings</span>
+                    <span>My Reservations</span>
                   </button>
                 </div>
               </div>
@@ -182,23 +247,20 @@ function MainContent() {
                   title: 'Trips & Expenses',
                   desc: 'Multi-currency budget tracking, category donut charts, and spending timeline.',
                   icon: Receipt,
-                  color: 'from-purple-500 to-indigo-600',
-                  bg: 'bg-purple-50',
-                  badge: 'Phase 6 Live',
-                  onClick: () => {
-                    setSelectedTripId(null);
-                    setActiveTab('trips');
-                  },
+                  color: 'from-violet-600 to-indigo-600',
+                  bg: 'bg-violet-50',
+                  badge: 'Budget Sync',
+                  onClick: () => navigateTo('trips', null),
                 },
                 {
                   id: 'transport',
                   title: 'Flights & Trains',
                   desc: 'Interactive 30-row flight seat maps, train tiers, and bus routes.',
                   icon: Plane,
-                  color: 'from-emerald-500 to-teal-500',
-                  bg: 'bg-emerald-50',
-                  badge: 'Phase 5 Live',
-                  onClick: () => setActiveTab('transport'),
+                  color: 'from-teal-500 to-cyan-600',
+                  bg: 'bg-teal-50',
+                  badge: 'Seat Selection',
+                  onClick: () => navigateTo('transport'),
                 },
                 {
                   id: 'hotels',
@@ -207,18 +269,18 @@ function MainContent() {
                   icon: Building2,
                   color: 'from-sky-500 to-indigo-500',
                   bg: 'bg-sky-50',
-                  badge: 'Phase 4 Live',
-                  onClick: () => setActiveTab('hotels'),
+                  badge: 'Curated Stays',
+                  onClick: () => navigateTo('hotels'),
                 },
                 {
                   id: 'bookings',
                   title: 'My Reservations',
                   desc: 'Manage hotel vouchers, flight boarding passes & cancellations.',
                   icon: Ticket,
-                  color: 'from-indigo-500 to-purple-500',
+                  color: 'from-indigo-600 to-purple-600',
                   bg: 'bg-indigo-50',
-                  badge: 'Unified',
-                  onClick: () => setActiveTab('bookings'),
+                  badge: 'E-Tickets',
+                  onClick: () => navigateTo('bookings'),
                 },
                 {
                   id: 'estimator',
@@ -227,7 +289,7 @@ function MainContent() {
                   icon: Calculator,
                   color: 'from-amber-500 to-rose-500',
                   bg: 'bg-amber-50',
-                  badge: 'Phase 8 Live',
+                  badge: 'Smart Forecast',
                   onClick: () => setEstimatorModalOpen(true),
                 },
               ].map((card) => {
@@ -236,85 +298,83 @@ function MainContent() {
                   <div
                     key={card.id}
                     onClick={card.onClick}
-                    className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all cursor-pointer group hover:-translate-y-0.5 relative"
+                    className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all cursor-pointer group hover:-translate-y-0.5 relative"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <div className={`w-12 h-12 rounded-xl bg-gradient-to-tr ${card.color} text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform`}>
                         <IconComponent className="w-6 h-6" />
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                         {card.badge}
                       </span>
                     </div>
-                    <h3 className="font-bold text-slate-800 text-base mb-1 flex items-center justify-between">
+                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base mb-1 flex items-center justify-between">
                       <span>{card.title}</span>
-                      <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                      <ArrowUpRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-violet-600 dark:group-hover:text-cyan-400 transition-colors" />
                     </h3>
-                    <p className="text-xs text-slate-500 leading-relaxed">{card.desc}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{card.desc}</p>
                   </div>
                 );
               })}
             </div>
 
             {/* Hub Status Summary */}
-            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-800 capitalize">
+                  <h2 className="text-lg font-bold text-slate-800 dark:text-white capitalize">
                     {activeTab === 'home' ? 'Trip Planning & Financial Hub' : activeTab}
                   </h2>
-                  <p className="text-xs text-slate-500">
-                    Phase 6 Expense Manager & Dual-Currency Engine is active and verified.
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Smart Multi-Currency Expense Ledger & Group Debt Engine Active.
                   </p>
                 </div>
-                <span className="text-xs px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full font-semibold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Phase 6 Live
+                <span className="text-xs px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-full font-semibold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  All Systems Operational
                 </span>
               </div>
 
               <div className="py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-5 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-2">
-                  <div className="text-xs font-bold text-indigo-900 uppercase tracking-wider">
+                <div className="p-5 rounded-2xl bg-violet-50/60 dark:bg-slate-800/60 border border-violet-100 dark:border-slate-800 space-y-2">
+                  <div className="text-xs font-bold text-violet-900 dark:text-violet-300 uppercase tracking-wider">
                     Dual-Currency Engine & Daily Sync
                   </div>
-                  <p className="text-xs text-slate-600">
-                    Frankfurter daily sync worker caches latest rates. Multi-currency expenses automatically compute and store immutable base currency (INR) values at entry time (ADR-004).
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    Daily sync worker caches latest European Central Bank benchmark rates. Multi-currency expenses automatically compute and record base currency values with full audit precision.
                   </p>
                   <button
-                    onClick={() => {
-                      setSelectedTripId(null);
-                      setActiveTab('trips');
-                    }}
-                    className="text-xs font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1 pt-1 cursor-pointer"
+                    onClick={() => navigateTo('trips', null)}
+                    className="text-xs font-bold text-violet-700 dark:text-cyan-400 hover:underline flex items-center gap-1 pt-1 cursor-pointer"
                   >
                     <span>Manage Expenses</span>
                     <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-sky-50/60 border border-sky-100 space-y-2">
-                  <div className="text-xs font-bold text-sky-900 uppercase tracking-wider">
-                    Recharts Visual Analytics
+                <div className="p-5 rounded-2xl bg-cyan-50/60 dark:bg-slate-800/60 border border-cyan-100 dark:border-slate-800 space-y-2">
+                  <div className="text-xs font-bold text-cyan-900 dark:text-cyan-300 uppercase tracking-wider">
+                    Visual Budget Analytics
                   </div>
-                  <p className="text-xs text-slate-600">
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
                     Category spending donut charts (Food, Stay, Transport, Activities), day-by-day spending timelines, and real-time budget utilization gauges with over-budget alerts.
                   </p>
-                  <div className="text-xs font-mono text-sky-600 pt-1">
-                    Visual Analytics Live
+                  <div className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 pt-1 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Real-time Financial Graphs Active</span>
                   </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                  <div className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                     Flights, Stays & Reservations
                   </div>
-                  <p className="text-xs text-slate-600">
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
                     Linked hotel stays and 30-row cabin seat reservations automatically roll into your trip's pre-paid spending totals.
                   </p>
                   <button
-                    onClick={() => setActiveTab('bookings')}
-                    className="text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center gap-1 pt-1 cursor-pointer"
+                    onClick={() => navigateTo('bookings')}
+                    className="text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 pt-1 cursor-pointer"
                   >
                     <span>View Reservations</span>
                     <ArrowRight className="w-3 h-3" />
@@ -324,51 +384,220 @@ function MainContent() {
             </div>
           </div>
         ) : (
-          /* Public Landing View */
-          <div className="space-y-16 py-6 animate-in fade-in duration-300">
-            {/* Hero Section */}
-            <div className="text-center max-w-3xl mx-auto space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 border border-indigo-200 text-indigo-700">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Unified Travel & Group Expense Platform</span>
+          /* Public Landing View - Sleek, Professional & Illustrated */
+          <div className="space-y-20 py-4 animate-in fade-in duration-300">
+            {/* Hero Section with Modern Vector Illustration */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center pt-4 sm:pt-8">
+              <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-violet-50 dark:bg-violet-950/60 border border-violet-200 dark:border-violet-800/70 text-violet-700 dark:text-violet-300 shadow-2xs">
+                  <Sparkles className="w-3.5 h-3.5 text-violet-600 dark:text-cyan-400" />
+                  <span>The Modern Travel Operating Platform</span>
+                </div>
+
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.12]">
+                  Plan, Book, and Split Trips in <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-500 dark:from-violet-400 dark:via-indigo-300 dark:to-cyan-400 bg-clip-text text-transparent">One Workspace</span>
+                </h1>
+
+                <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                  Search multi-modal transport with interactive seat maps, discover verified hotels, track live dual-currency budgets, and settle group debts with mathematical precision.
+                </p>
+
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
+                  <button
+                    onClick={() => openAuth('register')}
+                    className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/35 transition-all cursor-pointer flex items-center gap-2"
+                  >
+                    <span>Get Started Free</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => navigateTo('transport')}
+                    className="px-5 py-3.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-sm border border-slate-200 dark:border-slate-800 shadow-2xs transition-colors cursor-pointer"
+                  >
+                    Explore Transport
+                  </button>
+                  <button
+                    onClick={() => setEstimatorModalOpen(true)}
+                    className="px-5 py-3.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-sm border border-slate-200 dark:border-slate-800 shadow-2xs transition-colors cursor-pointer flex items-center gap-2"
+                  >
+                    <Calculator className="w-4 h-4 text-amber-500" />
+                    <span>Cost Estimator</span>
+                  </button>
+                </div>
+
+                {/* Micro trust indicators */}
+                <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <span>No credit card required</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <span>Real-time foreign exchange</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <span>Instant seat selection</span>
+                  </div>
+                </div>
               </div>
 
-              <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-tight">
-                Plan, Book, and Split Trips in <span className="bg-gradient-to-r from-indigo-600 via-sky-600 to-indigo-800 bg-clip-text text-transparent">One Place</span>
-              </h1>
+              {/* Vector Illustration Container */}
+              <div className="lg:col-span-6 flex justify-center items-center">
+                <TravelHeroIllustration className="w-full max-w-lg lg:max-w-none" />
+              </div>
+            </div>
 
-              <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-                Search multi-modal transport with flight seat maps, browse curated hotels, track travel budgets with live currency conversion, and simplify shared group expenses.
-              </p>
+            {/* Metrics & Capabilities Bar */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 shadow-xs">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                <div className="space-y-1">
+                  <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">40+</div>
+                  <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Flight & Rail Corridors</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-2xl sm:text-3xl font-black text-violet-600 dark:text-cyan-400">30+</div>
+                  <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Global Currencies</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">1-Click</div>
+                  <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Group Debt Settlement</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-2xl sm:text-3xl font-black text-cyan-600 dark:text-cyan-300">100%</div>
+                  <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Transparent Forecasts</div>
+                </div>
+              </div>
+            </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            {/* Illustrated Feature Showcase Cards */}
+            <div className="space-y-8">
+              <div className="text-center max-w-2xl mx-auto space-y-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-violet-600 dark:text-cyan-400 bg-violet-50 dark:bg-violet-950/60 px-3 py-1 rounded-full border border-violet-100 dark:border-violet-800/60">
+                  Engineered For Seamless Journeys
+                </span>
+                <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                  Everything you need for smarter travel
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  From multi-modal booking to post-trip financial reconciliation, TravelMate handles all logistics.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Feature 1: Transport & Seat Maps */}
+                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group">
+                  <div className="p-6 sm:p-8 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-300 flex items-center justify-center">
+                        <Plane className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white">Multi-Modal Transport & Real-Time Seat Maps</h3>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                      Search air corridors, high-speed rail, and express buses. Reserve specific cabin seats on 30-row aircraft layouts with concurrency protection and instant verified boarding passes.
+                    </p>
+                  </div>
+                  <div className="px-6 pb-6">
+                    <TransportIllustration />
+                  </div>
+                </div>
+
+                {/* Feature 2: Group Expense & Settlement */}
+                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group">
+                  <div className="p-6 sm:p-8 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-300 flex items-center justify-center">
+                        <Users className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white">Group Expense Splitting & Debt Simplification</h3>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                      Split bills equally, by exact percentages, or custom shares. Our minimal cash-flow engine resolves multi-member group balances into the smallest number of direct transfers.
+                    </p>
+                  </div>
+                  <div className="px-6 pb-6">
+                    <ExpenseIllustration />
+                  </div>
+                </div>
+
+                {/* Feature 3: Curated Stays */}
+                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group">
+                  <div className="p-6 sm:p-8 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 flex items-center justify-center">
+                        <Building2 className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white">Curated Accommodations & Rate Comparison</h3>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                      Discover verified properties powered by OpenStreetMap geo-data. Compare amenities, inspect star ratings, and view one-click outbound price comparisons against leading booking platforms.
+                    </p>
+                  </div>
+                  <div className="px-6 pb-6">
+                    <HotelIllustration />
+                  </div>
+                </div>
+
+                {/* Feature 4: Cost Estimator */}
+                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group">
+                  <div className="p-6 sm:p-8 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-300 flex items-center justify-center">
+                        <Calculator className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white">Predictive Multi-Package Cost Estimator</h3>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                      Forecast your travel expenditure across Basic, Balanced, and Comfort tiers. Adjust daily food and sightseeing allowances to compare your custom budget before booking.
+                    </p>
+                  </div>
+                  <div className="px-6 pb-6">
+                    <EstimatorIllustration />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sleek CTA Banner */}
+            <div className="bg-gradient-to-r from-slate-950 via-violet-950 to-slate-950 dark:from-slate-900 dark:via-indigo-950 dark:to-slate-900 rounded-3xl p-8 sm:p-12 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+              <div className="space-y-3 text-center md:text-left relative z-10 max-w-xl">
+                <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">
+                  Ready to upgrade your journey?
+                </span>
+                <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
+                  Start planning your next trip with TravelMate
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300">
+                  Join travelers who coordinate itineraries, reserve transit and stays, and settle shared budgets effortlessly.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-3 relative z-10">
                 <button
                   onClick={() => openAuth('register')}
-                  className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2"
+                  className="px-6 py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg transition-all cursor-pointer flex items-center gap-2"
                 >
-                  <span>Start Planning Free</span>
+                  <span>Create Free Account</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setActiveTab('transport')}
-                  className="px-6 py-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-200 shadow-xs transition-colors cursor-pointer"
+                  onClick={() => openAuth('login')}
+                  className="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-sm rounded-xl border border-white/20 transition-all cursor-pointer"
                 >
-                  Explore Flights & Trains
-                </button>
-                <button
-                  onClick={() => setEstimatorModalOpen(true)}
-                  className="px-6 py-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-200 shadow-xs transition-colors cursor-pointer flex items-center gap-2"
-                >
-                  <Calculator className="w-4 h-4 text-amber-500" />
-                  <span>Cost Estimator</span>
+                  Sign In
                 </button>
               </div>
+
+              {/* Decorative Glow */}
+              <div className="absolute -left-12 -top-12 w-60 h-60 rounded-full bg-violet-600/20 blur-3xl pointer-events-none" />
+              <div className="absolute -right-12 -bottom-12 w-60 h-60 rounded-full bg-cyan-600/20 blur-3xl pointer-events-none" />
             </div>
           </div>
         )}
       </main>
 
-      <Footer />
+      <Footer onNavigateTab={(tab) => navigateTo(tab)} />
 
       {/* Auth Modal */}
       <AuthModal
@@ -383,7 +612,7 @@ function MainContent() {
         onClose={() => setProfileModalOpen(false)}
       />
 
-      {/* Standalone Cost Estimator Modal (Phase 8) */}
+      {/* Standalone Cost Estimator Modal */}
       {estimatorModalOpen && (
         <CostEstimatorModal
           isOpen={estimatorModalOpen}
@@ -396,13 +625,15 @@ function MainContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <CurrencyProvider>
-        <ToastProvider>
-          <MainContent />
-          <Analytics />
-        </ToastProvider>
-      </CurrencyProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <CurrencyProvider>
+          <ToastProvider>
+            <MainContent />
+            <Analytics />
+          </ToastProvider>
+        </CurrencyProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

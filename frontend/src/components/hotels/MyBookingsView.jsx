@@ -11,7 +11,6 @@ import {
   CheckCircle2, 
   Printer, 
   Loader2, 
-  QrCode, 
   X,
   Ticket,
   Armchair,
@@ -154,7 +153,7 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
             My Travel Reservations & E-Tickets
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            View hotel vouchers, flight boarding passes, and rail/bus simulated tickets.
+            View hotel vouchers, flight boarding passes, and confirmed e-tickets.
           </p>
         </div>
 
@@ -235,7 +234,7 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
         <BookingsListSkeleton count={4} />
       ) : filteredBookings.length === 0 ? (
         <EmptyState
-          icon={Ticket}
+          showIllustration={true}
           badge={statusFilter === 'all' ? 'No Reservations' : `${statusFilter.toUpperCase()} Reservations`}
           title={statusFilter === 'all' ? 'No Bookings Found' : `No ${statusFilter} Reservations`}
           description="You haven't booked any stays or transport yet. Explore our verified hotels or scheduled flights and trains to reserve seats and rooms."
@@ -414,7 +413,7 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
                     </button>
                   )}
 
-                  {/* Reviews & Complete (Phase 8) */}
+                  {/* Reviews & Complete */}
                   {booking.status === 'completed' ? (
                     reviewedBookingIds.has(booking.id) ? (
                       <span className="py-2 px-3 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-1">
@@ -602,7 +601,7 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
         </div>
       )}
 
-      {/* Review Modal (Phase 8) */}
+      {/* Review Modal */}
       {reviewModalBooking && (
         <ReviewModal
           isOpen={Boolean(reviewModalBooking)}

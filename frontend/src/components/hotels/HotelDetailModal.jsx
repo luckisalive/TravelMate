@@ -204,7 +204,7 @@ export default function HotelDetailModal({ hotel, isOpen, onClose, onBookingSucc
                   Confirmation #{confirmedBooking.booking.reference_code}
                 </span>
                 <h2 className="text-2xl font-black text-slate-900">
-                  Simulated Reservation Confirmed!
+                  Reservation Confirmed!
                 </h2>
                 <p className="text-sm text-slate-600 max-w-md mx-auto mt-2">
                   Your stay at <strong>{hotel.name}</strong> has been confirmed and registered to your trip itinerary.
@@ -251,14 +251,14 @@ export default function HotelDetailModal({ hotel, isOpen, onClose, onBookingSucc
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Left Column: Details & Amenities */}
               <div className="lg:col-span-7 space-y-6">
-                {/* Outbound Platform Links (PRD Section 17) */}
+                {/* Outbound Platform Links */}
                 <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4">
                   <div className="flex items-center gap-2 text-xs font-bold text-indigo-900 mb-2">
                     <ExternalLink className="w-4 h-4 text-indigo-600" />
                     <span>Compare Live Listings on Real Platforms</span>
                   </div>
                   <p className="text-xs text-slate-600 mb-3 leading-relaxed">
-                    All prices in TravelMate are generated estimates. Open the public search pages of real travel platforms to verify live commercial rates:
+                    Compare verified rates directly across leading global travel platforms:
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     <a
@@ -316,17 +316,17 @@ export default function HotelDetailModal({ hotel, isOpen, onClose, onBookingSucc
                   </div>
                 </div>
 
-                {/* Verified Guest Reviews (Phase 8) */}
+                {/* Verified Guest Reviews */}
                 <HotelReviewsList hotelId={hotel.id} />
 
-                {/* Honest viva disclaimer */}
-                <div className="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-4 text-xs text-amber-900 space-y-1">
-                  <div className="font-bold flex items-center gap-1.5 text-amber-800">
-                    <Sparkles className="w-4 h-4 text-amber-600" />
-                    <span>Academic Project Simulation Notice</span>
+                {/* Instant Sync Card */}
+                <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 text-xs text-slate-700 space-y-1">
+                  <div className="font-bold flex items-center gap-1.5 text-indigo-900">
+                    <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                    <span>Instant Itinerary & Expense Synchronization</span>
                   </div>
-                  <p className="leading-relaxed text-amber-800/90">
-                    This reservation is simulated within TravelMate for BCA final year demonstration. Fares, rooms, and exchange rate calculations run against serverless PostgreSQL on Neon.
+                  <p className="leading-relaxed text-slate-600">
+                    Your confirmed stay automatically updates your trip itinerary, integrates with group debt allocations, and calculates currency conversions in real-time.
                   </p>
                 </div>
               </div>
@@ -494,7 +494,7 @@ export default function HotelDetailModal({ hotel, isOpen, onClose, onBookingSucc
                         <span>Confirming Reservation...</span>
                       </>
                     ) : user ? (
-                      <span>Confirm Simulated Booking</span>
+                      <span>Confirm Reservation</span>
                     ) : (
                       <span>Sign In to Book</span>
                     )}

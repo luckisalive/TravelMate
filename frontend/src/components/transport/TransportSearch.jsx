@@ -146,7 +146,7 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-sky-100 backdrop-blur-sm mb-3">
             <Sparkles className="w-3.5 h-3.5 text-sky-300" />
-            <span>Phase 5 Multi-Modal Transport & Flight Seat Map</span>
+            <span>Multi-Modal Transport & Real-Time Seat Selection</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
             Book Flights, Trains & Intercity Buses
@@ -169,10 +169,10 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
             <button
               key={tab.id}
               onClick={() => setMode(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                 isActive
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100 scale-102'
-                  : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100 dark:shadow-none scale-102'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -183,7 +183,7 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
       </div>
 
       {/* Search & Filter Toolbar */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
           {/* Origin Dropdown */}
           <div className="md:col-span-4">
@@ -193,7 +193,7 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
             <select
               value={origin}
               onChange={(e) => setOrigin(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="ALL">All Origins</option>
               {stations.map((st) => (
@@ -209,7 +209,7 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
             <button
               type="button"
               onClick={handleSwapStations}
-              className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 flex items-center justify-center transition-colors border border-slate-200"
+              className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-cyan-400 flex items-center justify-center transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
               title="Swap Origin and Destination"
             >
               <ArrowLeftRight className="w-4 h-4" />
@@ -224,7 +224,7 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
             <select
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="ALL">All Destinations</option>
               {stations.map((st) => (
@@ -244,24 +244,24 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
               type="date"
               value={travelDate}
               onChange={(e) => setTravelDate(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
         </div>
 
         {/* Secondary Filters: Sorting & Travel Style Preference */}
-        <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
           {/* Travel Style Weights */}
           <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-500">Travel Style:</span>
+            <span className="font-bold text-slate-500 dark:text-slate-400">Travel Style:</span>
             {['cheapest', 'balanced', 'comfort'].map((style) => (
               <button
                 key={style}
                 onClick={() => setTravelStyle(style)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-colors ${
+                className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-colors cursor-pointer ${
                   travelStyle === style
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                    : 'text-slate-600 hover:bg-slate-100'
+                    ? 'bg-indigo-50 text-indigo-700 dark:bg-slate-800 dark:text-cyan-400 border border-indigo-200 dark:border-slate-700'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 {style}
@@ -271,13 +271,13 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
 
           {/* Sort By Dropdown */}
           <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-500">Sort By:</span>
+            <span className="font-bold text-slate-500 dark:text-slate-400">Sort By:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="recommended">Recommended (Smart Heuristic)</option>
+              <option value="recommended">Recommended (Best Value)</option>
               <option value="price_asc">Price: Low to High</option>
               <option value="price_desc">Price: High to Low</option>
               <option value="duration_asc">Duration: Fastest First</option>
@@ -290,10 +290,10 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
       {/* Results Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-extrabold text-slate-900">
+          <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
             Available Transit Schedules
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Showing {transports.length} option{transports.length === 1 ? '' : 's'} across {origin || 'all'} → {destination || 'all'}
           </p>
         </div>
@@ -301,7 +301,7 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
         {onOpenMyBookings && (
           <button
             onClick={onOpenMyBookings}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-colors"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-indigo-700 dark:text-cyan-400 bg-indigo-50 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-slate-750 border border-indigo-200 dark:border-slate-700 transition-colors cursor-pointer"
           >
             <Ticket className="w-3.5 h-3.5" />
             <span>My Booked Tickets</span>
@@ -311,8 +311,8 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
 
       {/* Error state */}
       {error && (
-        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2.5">
-          <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+        <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2.5">
+          <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
           <span>{error}</span>
         </div>
       )}
@@ -337,7 +337,7 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
         </div>
       ) : transports.length === 0 ? (
         <EmptyState
-          icon={Compass}
+          showIllustration={true}
           badge="No Transit Options"
           title="No transport options found for this route"
           description="Try adjusting your departure date, selecting 'All Modes', or picking primary transit hubs like Mumbai (BOM), Delhi (DEL), Bengaluru (BLR), or Goa (GOI)."
@@ -367,15 +367,15 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
 
           {/* Pagination Controls */}
           {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-slate-200/80 pt-4 px-2">
-              <span className="text-xs text-slate-500 font-medium">
+            <div className="flex items-center justify-between border-t border-slate-200/80 dark:border-slate-800 pt-4 px-2">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Showing {transports.length} of {pagination.total} options
               </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700 cursor-pointer"
+                  className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700 dark:text-slate-300 cursor-pointer"
                   title="Previous Page"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -389,7 +389,7 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
                       className={`w-8 h-8 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                         page === i + 1
                           ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                          : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
                       }`}
                     >
                       {i + 1}
@@ -400,7 +400,7 @@ export default function TransportSearch({ onOpenAuth, onOpenMyBookings }) {
                 <button
                   onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
                   disabled={page >= pagination.totalPages}
-                  className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700 cursor-pointer"
+                  className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700 dark:text-slate-300 cursor-pointer"
                   title="Next Page"
                 >
                   <ChevronRight className="w-4 h-4" />

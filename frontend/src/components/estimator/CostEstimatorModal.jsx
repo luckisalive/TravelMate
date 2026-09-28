@@ -118,8 +118,8 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-base sm:text-lg">Trip Cost Estimator</h3>
-                <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-400/30">
-                  Phase 8 Intelligence
+                <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-400/20 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-400/30">
+                  Smart Forecast
                 </span>
               </div>
               <p className="text-indigo-200 text-xs">
@@ -437,13 +437,11 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
             </div>
           )}
 
-          {/* Academic Disclaimer */}
-          <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-2.5 text-xs text-amber-900">
-            <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          {/* Budget Forecast Notice */}
+          <div className="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex items-start gap-2.5 text-xs text-indigo-950">
+            <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              <strong>Transparent Academic Heuristics (PRD Section 10):</strong> Predictions are simulated estimations
-              derived from catalog corridor fares, OpenStreetMap hotel averages, and customizable daily spending allowances.
-              All models run deterministically without external black-box APIs.
+              <strong>Smart Budget Analysis:</strong> Predictions synthesize corridor transit fares, verified local accommodation price medians, and personalized daily activity allowances to generate comprehensive pre-trip forecasts.
             </p>
           </div>
         </div>

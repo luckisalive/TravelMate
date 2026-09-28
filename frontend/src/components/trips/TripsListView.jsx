@@ -226,10 +226,10 @@ export default function TripsListView({ onSelectTrip, onExploreBookings }) {
         </div>
       ) : (
         <EmptyState
-          icon={Wallet}
+          showIllustration={true}
           badge="No Trips Found"
           title="No Trips Created Yet"
-          description="Create your first trip to start setting budgets, logging food and transit expenses with server-side currency conversions, and visualizing analytics."
+          description="Create your first trip to start setting budgets, logging expenses with real-time currency conversions, and visualizing analytics."
           action={{
             label: 'Create First Trip',
             icon: Plus,

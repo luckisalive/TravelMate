@@ -124,7 +124,7 @@ export default function HotelSearch({ onOpenAuth }) {
               Verified OpenStreetMap Stays
             </span>
             <span className="text-xs text-slate-300">
-              Prices synchronized with Neon PostgreSQL & Frankfurter Rates
+              Live Currency Sync & Verified Partner Properties
             </span>
           </div>
 
@@ -132,7 +132,7 @@ export default function HotelSearch({ onOpenAuth }) {
             Explore Hotels & Stays
           </h1>
           <p className="text-sm text-slate-300 leading-relaxed max-w-2xl">
-            Compare generated rates, inspect amenities, book simulated reservations, or inspect real live rates on Booking.com & MakeMyTrip.
+            Compare verified rates, inspect amenities, reserve accommodations seamlessly, or compare live partner rates on Booking.com & MakeMyTrip.
           </p>
 
           {/* Sub-Tabs: Search vs My Reservations */}
@@ -199,7 +199,7 @@ export default function HotelSearch({ onOpenAuth }) {
                 className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
                   city.toLowerCase() === c.city.toLowerCase()
                     ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                    : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
                 }`}
               >
                 <MapPin className="w-3 h-3 text-indigo-400" />
@@ -210,7 +210,7 @@ export default function HotelSearch({ onOpenAuth }) {
           </div>
 
           {/* Search & Filter Bar */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-12 gap-3">
               {/* Keyword Search */}
               <div className="sm:col-span-6 relative">
@@ -220,7 +220,7 @@ export default function HotelSearch({ onOpenAuth }) {
                   placeholder="Search by hotel name or landmark..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800"
                 />
               </div>
 
@@ -232,9 +232,9 @@ export default function HotelSearch({ onOpenAuth }) {
                     setSortBy(e.target.value);
                     setPage(1);
                   }}
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500"
                 >
-                  <option value="recommended">Recommended Heuristic</option>
+                  <option value="recommended">Recommended (Top Pick)</option>
                   <option value="price_asc">Price: Low to High</option>
                   <option value="price_desc">Price: High to Low</option>
                   <option value="rating_desc">Guest Rating: High to Low</option>
@@ -246,14 +246,14 @@ export default function HotelSearch({ onOpenAuth }) {
               <div className="sm:col-span-3 flex items-center gap-2">
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors"
+                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors cursor-pointer"
                 >
                   Search Stays
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowFiltersMobile(!showFiltersMobile)}
-                  className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl border border-slate-200 text-xs font-semibold flex items-center gap-1"
+                  className="p-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1 cursor-pointer"
                   title="Toggle Advanced Filters"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
@@ -263,12 +263,12 @@ export default function HotelSearch({ onOpenAuth }) {
 
             {/* Filter Drawer */}
             {showFiltersMobile && (
-              <div className="pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs animate-in fade-in duration-200">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs animate-in fade-in duration-200">
                 {/* Price Slider */}
                 <div className="space-y-2">
-                  <div className="flex justify-between font-semibold text-slate-700">
+                  <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-200">
                     <span>Max Price per Night</span>
-                    <span className="text-indigo-600 font-bold font-mono">
+                    <span className="text-indigo-600 dark:text-cyan-400 font-bold font-mono">
                       {formatPrice(maxPrice).fullDisplay}
                     </span>
                   </div>
@@ -282,7 +282,7 @@ export default function HotelSearch({ onOpenAuth }) {
                       setMaxPrice(parseInt(e.target.value, 10));
                       setPage(1);
                     }}
-                    className="w-full accent-indigo-600"
+                    className="w-full accent-indigo-600 dark:accent-cyan-400"
                   />
                   <div className="flex justify-between text-[10px] text-slate-400">
                     <span>₹1,500</span>
@@ -292,7 +292,7 @@ export default function HotelSearch({ onOpenAuth }) {
 
                 {/* Star Filter */}
                 <div className="space-y-2">
-                  <span className="block font-semibold text-slate-700">Minimum Star Category</span>
+                  <span className="block font-semibold text-slate-700 dark:text-slate-200">Minimum Star Category</span>
                   <div className="flex items-center gap-1.5">
                     {[
                       { val: 0, label: 'Any' },
@@ -307,10 +307,10 @@ export default function HotelSearch({ onOpenAuth }) {
                           setMinStars(s.val);
                           setPage(1);
                         }}
-                        className={`flex-1 py-1.5 rounded-lg font-semibold transition-colors ${
+                        className={`flex-1 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
                           minStars === s.val
                             ? 'bg-indigo-600 text-white shadow-sm'
-                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                            : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         {s.label}
@@ -321,7 +321,7 @@ export default function HotelSearch({ onOpenAuth }) {
 
                 {/* Travel Style Recommendation Preference */}
                 <div className="space-y-2">
-                  <span className="block font-semibold text-slate-700">
+                  <span className="block font-semibold text-slate-700 dark:text-slate-200">
                     Travel Preference Weighting
                   </span>
                   <div className="flex items-center gap-1.5">
@@ -337,10 +337,10 @@ export default function HotelSearch({ onOpenAuth }) {
                           setTravelStyle(st.key);
                           setPage(1);
                         }}
-                        className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-colors ${
+                        className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer ${
                           travelStyle === st.key
                             ? 'bg-indigo-600 text-white shadow-sm'
-                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                            : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         {st.label}
@@ -354,7 +354,7 @@ export default function HotelSearch({ onOpenAuth }) {
                   <button
                     type="button"
                     onClick={handleResetFilters}
-                    className="text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1 underline font-medium"
+                    className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1 underline font-medium cursor-pointer"
                   >
                     <RotateCcw className="w-3 h-3" />
                     <span>Reset All Filters</span>
@@ -365,16 +365,16 @@ export default function HotelSearch({ onOpenAuth }) {
           </div>
 
           {/* Results Summary Bar */}
-          <div className="flex items-center justify-between text-xs text-slate-500 px-1">
+          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
             <div>
-              Showing <span className="font-bold text-slate-800">{hotels.length}</span> of{' '}
-              <span className="font-bold text-slate-800">{pagination.total}</span> verified stays
+              Showing <span className="font-bold text-slate-800 dark:text-slate-200">{hotels.length}</span> of{' '}
+              <span className="font-bold text-slate-800 dark:text-slate-200">{pagination.total}</span> verified stays
               {city && (
-                <span> in <strong className="text-indigo-600">{city}</strong></span>
+                <span> in <strong className="text-indigo-600 dark:text-cyan-400">{city}</strong></span>
               )}
             </div>
             {sortBy === 'recommended' && (
-              <span className="flex items-center gap-1 text-indigo-600 font-semibold bg-indigo-50 px-2.5 py-0.5 rounded-full">
+              <span className="flex items-center gap-1 text-indigo-600 dark:text-cyan-400 font-semibold bg-indigo-50 dark:bg-slate-800 px-2.5 py-0.5 rounded-full border border-indigo-100 dark:border-slate-700">
                 <Sparkles className="w-3 h-3" />
                 Ranked by {travelStyle.toUpperCase()} preference
               </span>
@@ -387,19 +387,18 @@ export default function HotelSearch({ onOpenAuth }) {
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4 animate-pulse"
+                  className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 space-y-4 animate-pulse"
                 >
-                  <div className="aspect-video bg-slate-200 rounded-xl" />
-                  <div className="h-4 bg-slate-200 rounded w-3/4" />
-                  <div className="h-3 bg-slate-100 rounded w-1/2" />
-                  <div className="h-6 bg-slate-200 rounded w-1/3 pt-4" />
+                  <div className="aspect-video bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                  <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4" />
+                  <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-1/2" />
+                  <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/3 pt-4" />
                 </div>
               ))}
             </div>
           ) : hotels.length === 0 ? (
             <EmptyState
-              icon={Building2}
-              iconBg="bg-amber-50 text-amber-600"
+              showIllustration={true}
               badge="No Stays Found"
               title="No Hotels Match Your Filters"
               description="No properties match your current destination or filter parameters. Try adjusting price bounds, minimum star ratings, or resetting filters."
@@ -429,7 +428,7 @@ export default function HotelSearch({ onOpenAuth }) {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700"
+                className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700 dark:text-slate-300"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -439,10 +438,10 @@ export default function HotelSearch({ onOpenAuth }) {
                   <button
                     key={i + 1}
                     onClick={() => setPage(i + 1)}
-                    className={`w-8 h-8 rounded-xl text-xs font-bold transition-colors ${
+                    className={`w-8 h-8 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                       page === i + 1
                         ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                        : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
                     }`}
                   >
                     {i + 1}

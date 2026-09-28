@@ -1,8 +1,11 @@
 import React from 'react';
+import EmptyIllustration from '../illustrations/EmptyIllustration';
 
 export default function EmptyState({
   icon: Icon,
   iconBg = 'bg-indigo-50 text-indigo-600',
+  illustration: Illustration,
+  showIllustration = false,
   badge,
   title,
   description,
@@ -12,15 +15,19 @@ export default function EmptyState({
 }) {
   return (
     <div
-      className={`bg-white rounded-3xl p-8 sm:p-12 text-center border border-dashed border-slate-200 shadow-xs max-w-lg mx-auto space-y-4 animate-in fade-in duration-200 ${className}`}
+      className={`bg-white rounded-3xl p-8 sm:p-12 text-center border border-dashed border-slate-200/90 shadow-xs max-w-lg mx-auto space-y-4 animate-in fade-in duration-200 ${className}`}
     >
-      {Icon && (
+      {Illustration ? (
+        <Illustration className="w-48 h-36 mx-auto mb-2" />
+      ) : showIllustration ? (
+        <EmptyIllustration className="w-48 h-36 mx-auto mb-2" />
+      ) : Icon ? (
         <div
           className={`w-16 h-16 rounded-3xl flex items-center justify-center mx-auto shadow-xs ${iconBg}`}
         >
           <Icon className="w-8 h-8" />
         </div>
-      )}
+      ) : null}
 
       {badge && (
         <div>

@@ -195,19 +195,19 @@ export default function TripBalancesView({ tripId, trip, onRefreshTrip }) {
         </div>
       </div>
 
-      {/* 2. OPTIMAL DEBT SETTLEMENTS (Greedy Min-Cash-Flow - ADR-008) */}
+      {/* 2. OPTIMAL DEBT SETTLEMENTS */}
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-bold text-slate-900">Optimal Debt Settlements</h3>
-              <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-amber-600" />
-                <span>ADR-008 Min-Cash-Flow</span>
+              <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-indigo-600" />
+                <span>Smart Simplification</span>
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Greedy algorithm calculates minimal peer-to-peer transfers to settle all trip debts.
+              Minimal cash-flow algorithm calculates the fewest peer-to-peer transfers needed to settle all trip debts.
             </p>
           </div>
 

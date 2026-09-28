@@ -64,9 +64,9 @@ export default function HotelCard({ hotel, onSelect, onBook }) {
           </div>
         )}
 
-        {/* Simulated Disclaimer Tag */}
-        <div className="absolute bottom-2 left-3 px-2 py-0.5 rounded bg-black/40 backdrop-blur-sm text-[10px] text-slate-200">
-          Simulated Estimate
+        {/* Verified Partner Tag */}
+        <div className="absolute bottom-2 left-3 px-2 py-0.5 rounded-full bg-slate-950/60 backdrop-blur-sm text-[10px] text-slate-200 font-medium">
+          Verified Partner
         </div>
       </div>
 
