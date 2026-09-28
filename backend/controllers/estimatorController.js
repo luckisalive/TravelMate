@@ -1,10 +1,11 @@
 const EstimatorService = require('../services/estimatorService');
 
 /**
- * POST /api/estimator/estimate - Generate standalone trip cost estimate
+ * POST & GET /api/estimator/estimate - Generate standalone trip cost estimate
  */
 async function getEstimate(req, res, next) {
   try {
+    const input = req.method === 'GET' ? { ...req.query, ...req.body } : { ...req.body, ...req.query };
     const {
       city = 'Goa',
       origin,
@@ -12,15 +13,24 @@ async function getEstimate(req, res, next) {
       nights,
       budget = 0,
       customAllowances = {},
-    } = req.body;
+    } = input;
+
+    let allowances = customAllowances;
+    if (typeof allowances === 'string') {
+      try {
+        allowances = JSON.parse(allowances);
+      } catch {
+        allowances = {};
+      }
+    }
 
     const estimate = await EstimatorService.calculateEstimate({
-      city,
-      origin,
-      days,
-      nights,
-      budget,
-      customAllowances,
+      city: city || 'Goa',
+      origin: origin || null,
+      days: parseInt(days, 10) || 4,
+      nights: nights !== undefined ? parseInt(nights, 10) : null,
+      budget: parseFloat(budget) || 0,
+      customAllowances: allowances,
     });
 
     return res.json({
@@ -33,7 +43,7 @@ async function getEstimate(req, res, next) {
 }
 
 /**
- * POST /api/estimator/trip/:id & POST /api/trips/:id/estimate - Estimate for a specific trip
+ * POST & GET /api/estimator/trip/:id & /api/trips/:id/estimate - Estimate for a specific trip
  */
 async function getTripEstimate(req, res, next) {
   try {
@@ -45,7 +55,16 @@ async function getTripEstimate(req, res, next) {
       });
     }
 
-    const { customAllowances = {} } = req.body;
+    const input = req.method === 'GET' ? { ...req.query, ...req.body } : { ...req.body, ...req.query };
+    let { customAllowances = {} } = input;
+    if (typeof customAllowances === 'string') {
+      try {
+        customAllowances = JSON.parse(customAllowances);
+      } catch {
+        customAllowances = {};
+      }
+    }
+
     const estimate = await EstimatorService.estimateTrip(tripId, customAllowances);
 
     if (!estimate) {
