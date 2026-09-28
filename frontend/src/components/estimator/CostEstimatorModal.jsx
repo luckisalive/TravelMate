@@ -67,7 +67,17 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
         }
       }
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to calculate estimate.');
+      let errMsg = err.response?.data?.error?.message;
+      if (!errMsg) {
+        if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+          errMsg = 'Server response timed out. The backend container may be waking up from free-tier sleep—please retry in a moment.';
+        } else if (err.message === 'Network Error') {
+          errMsg = 'Cannot reach backend server. The service may be spinning up from idle sleep—please wait a few seconds and retry.';
+        } else {
+          errMsg = err.message || 'Failed to calculate estimate.';
+        }
+      }
+      setError(errMsg);
     } finally {
       setLoading(false);
     }

@@ -1,10 +1,22 @@
 import axios from 'axios';
 
+const getBaseURL = () => {
+  let url = import.meta.env.VITE_API_URL;
+  if (!url) return '/api';
+  url = url.trim().replace(/\/+$/, '');
+  // If user configured a full origin URL without /api, ensure /api is appended
+  if (/^https?:\/\//i.test(url) && !url.endsWith('/api')) {
+    return `${url}/api`;
+  }
+  return url;
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 60000,
 });
 
 // Attach JWT token from localStorage to outgoing requests
