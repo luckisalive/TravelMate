@@ -6,9 +6,7 @@ import {
   Building,
   Plane,
   AlertTriangle,
-  CheckCircle2,
   Sliders,
-  Sparkles,
   Info,
   Loader2,
   TrendingDown,
@@ -18,8 +16,6 @@ import api from '../../services/api';
 import { useCurrency } from '../../context/CurrencyContext';
 
 export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa', tripId = null, initialBudget = 0, initialDays = 4 }) {
-  if (!isOpen) return null;
-
   const { formatWithHome } = useCurrency();
 
   const [city, setCity] = useState(initialCity || 'Goa');
@@ -37,27 +33,38 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
   const [estimateData, setEstimateData] = useState(null);
   const [error, setError] = useState('');
 
-  const fetchEstimate = async () => {
+  const fetchEstimate = async (params = {}) => {
     setLoading(true);
     setError('');
     try {
       let res;
       if (tripId) {
         res = await api.post(`/trips/${tripId}/estimate`, {
-          customAllowances,
+          customAllowances: params.customAllowances || customAllowances,
         });
       } else {
+        const queryCity = params.city !== undefined ? params.city : city;
+        const queryOrigin = params.origin !== undefined ? params.origin : origin;
+        const queryDays = params.days !== undefined ? params.days : days;
+        const queryBudget = params.budget !== undefined ? params.budget : budget;
+        const queryAllowances = params.customAllowances !== undefined ? params.customAllowances : customAllowances;
+
         res = await api.post('/estimator/estimate', {
-          city,
-          origin: origin.trim() || undefined,
-          days: parseInt(days, 10) || 4,
-          budget: parseFloat(budget) || 0,
-          customAllowances,
+          city: queryCity,
+          origin: queryOrigin.trim() || undefined,
+          days: parseInt(queryDays, 10) || 4,
+          budget: parseFloat(queryBudget) || 0,
+          customAllowances: queryAllowances,
         });
       }
 
       if (res.data.success) {
         setEstimateData(res.data.data);
+        if (tripId && res.data.data) {
+          if (res.data.data.destination_city) setCity(res.data.data.destination_city);
+          if (res.data.data.days) setDays(res.data.data.days);
+          if (res.data.data.budget !== undefined && res.data.data.budget !== null) setBudget(res.data.data.budget);
+        }
       }
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to calculate estimate.');
@@ -67,18 +74,40 @@ export default function CostEstimatorModal({ isOpen, onClose, initialCity = 'Goa
   };
 
   useEffect(() => {
-    fetchEstimate();
-  }, [tripId]);
+    if (!isOpen) return;
+
+    const effectiveCity = initialCity || 'Goa';
+    const effectiveDays = initialDays || 4;
+    const effectiveBudget = initialBudget || 30000;
+
+    setCity(effectiveCity);
+    setDays(effectiveDays);
+    setBudget(effectiveBudget);
+
+    fetchEstimate({
+      city: effectiveCity,
+      days: effectiveDays,
+      budget: effectiveBudget,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, tripId, initialCity, initialBudget, initialDays]);
 
   const handleApplyParams = (e) => {
     e.preventDefault();
     fetchEstimate();
   };
 
+  if (!isOpen) return null;
+
   const packages = estimateData?.packages;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
+    >
       <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full my-auto overflow-hidden border border-slate-100 flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="px-6 py-4.5 bg-gradient-to-r from-indigo-900 via-indigo-800 to-indigo-950 text-white flex items-center justify-between shrink-0">

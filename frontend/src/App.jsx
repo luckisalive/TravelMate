@@ -355,6 +355,13 @@ function MainContent() {
                 >
                   Explore Flights & Trains
                 </button>
+                <button
+                  onClick={() => setEstimatorModalOpen(true)}
+                  className="px-6 py-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-200 shadow-xs transition-colors cursor-pointer flex items-center gap-2"
+                >
+                  <Calculator className="w-4 h-4 text-amber-500" />
+                  <span>Cost Estimator</span>
+                </button>
               </div>
             </div>
           </div>
@@ -377,10 +384,12 @@ function MainContent() {
       />
 
       {/* Standalone Cost Estimator Modal (Phase 8) */}
-      <CostEstimatorModal
-        isOpen={estimatorModalOpen}
-        onClose={() => setEstimatorModalOpen(false)}
-      />
+      {estimatorModalOpen && (
+        <CostEstimatorModal
+          isOpen={estimatorModalOpen}
+          onClose={() => setEstimatorModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
