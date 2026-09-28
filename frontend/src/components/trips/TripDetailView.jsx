@@ -25,7 +25,11 @@ import {
   Plane,
   X,
   UserCheck,
-  Calculator
+  Calculator,
+  Ticket,
+  Train,
+  Bus,
+  ExternalLink
 } from 'lucide-react';
 import { 
   PieChart, 
@@ -754,6 +758,22 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
               <div className="grid grid-cols-1 gap-3">
                 {trip.bookings.map((booking) => {
                   const isHotel = booking.hotel_id !== null;
+                  const mode = (booking.transport_mode || '').toLowerCase();
+                  const ModeIcon = isHotel 
+                    ? Building2 
+                    : mode === 'train' 
+                    ? Train 
+                    : mode === 'bus' 
+                    ? Bus 
+                    : Plane;
+
+                  const checkInFormatted = booking.check_in 
+                    ? (typeof booking.check_in === 'string' ? booking.check_in.split('T')[0] : new Date(booking.check_in).toISOString().split('T')[0]) 
+                    : null;
+                  const checkOutFormatted = booking.check_out 
+                    ? (typeof booking.check_out === 'string' ? booking.check_out.split('T')[0] : new Date(booking.check_out).toISOString().split('T')[0]) 
+                    : null;
+
                   return (
                     <div
                       key={booking.id}
@@ -763,13 +783,13 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                           isHotel ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400'
                         }`}>
-                          {isHotel ? <Building2 className="w-5 h-5" /> : <Plane className="w-5 h-5" />}
+                          <ModeIcon className="w-5 h-5" />
                         </div>
 
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase">
-                              {isHotel ? 'Hotel Stay' : booking.transport_mode?.toUpperCase()}
+                              {isHotel ? 'Hotel Stay' : (booking.transport_mode?.toUpperCase() || 'TRANSPORT')}
                             </span>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                               booking.status === 'confirmed' ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
@@ -778,23 +798,35 @@ export default function TripDetailView({ tripId, onBack, onNavigateToBookings })
                             </span>
                           </div>
                           <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                            {isHotel ? booking.hotel_name : `${booking.transport_operator} (${booking.transport_number})`}
+                            {isHotel ? booking.hotel_name : `${booking.transport_operator || 'Transport'} (${booking.transport_number || ''})`}
                           </h4>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
                             {isHotel
-                              ? `${booking.hotel_city} • Check-in: ${booking.check_in} to ${booking.check_out}`
-                              : `${booking.transport_origin} → ${booking.transport_destination} ${booking.seat_no ? `• Seat ${booking.seat_no}` : ''}`}
+                              ? `${booking.hotel_city || ''} • Stay: ${checkInFormatted || ''} to ${checkOutFormatted || ''}`
+                              : `${booking.transport_origin || ''} → ${booking.transport_destination || ''}${booking.seat_no ? ` • Seat ${booking.seat_no}` : ''}${booking.passenger_name ? ` • Passenger: ${booking.passenger_name}` : ''}`}
                           </p>
                         </div>
                       </div>
 
-                      <div className="text-right">
-                        <div className="text-base font-black text-slate-900 dark:text-white">
-                          {formatPrice(booking.amount_base).formatted}
+                      <div className="flex items-center gap-4 self-end sm:self-center">
+                        <div className="text-right">
+                          <div className="text-base font-black text-slate-900 dark:text-white">
+                            {formatPrice(booking.amount_base).formatted}
+                          </div>
+                          <div className="text-[10px] text-slate-400 font-mono">
+                            Pre-paid Booking
+                          </div>
                         </div>
-                        <div className="text-[10px] text-slate-400 font-mono">
-                          Pre-paid Booking
-                        </div>
+
+                        {onNavigateToBookings && (
+                          <button
+                            onClick={onNavigateToBookings}
+                            className="p-2 rounded-xl text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                            title="View E-Ticket / Reservation in Bookings"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   );

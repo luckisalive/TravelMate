@@ -6,17 +6,24 @@ async function getMyTrips(req, res, next) {
     const result = await db.query(
       `SELECT t.id, t.name, t.created_by, t.start_date, t.end_date, t.budget, t.base_currency, t.created_at,
               COALESCE(tm.role, CASE WHEN t.created_by = $1 THEN 'owner' ELSE 'member' END) AS role,
-              COUNT(DISTINCT b.id) FILTER (WHERE b.status <> 'cancelled') AS booking_count,
-              COUNT(DISTINCT e.id) AS expense_count,
-              COALESCE(SUM(DISTINCT CASE WHEN b.status <> 'cancelled' THEN b.amount_base ELSE 0 END), 0) AS total_bookings_base,
+              COALESCE(
+                (SELECT COUNT(*) FROM bookings b2 WHERE b2.trip_id = t.id AND b2.status <> 'cancelled'),
+                0
+              ) AS booking_count,
+              COALESCE(
+                (SELECT COUNT(*) FROM expenses e2 WHERE e2.trip_id = t.id),
+                0
+              ) AS expense_count,
+              COALESCE(
+                (SELECT SUM(b2.amount_base) FROM bookings b2 WHERE b2.trip_id = t.id AND b2.status <> 'cancelled'),
+                0
+              ) AS total_bookings_base,
               COALESCE(
                 (SELECT SUM(e2.amount_base) FROM expenses e2 WHERE e2.trip_id = t.id),
                 0
               ) AS total_expenses_base
        FROM trips t
        LEFT JOIN trip_members tm ON t.id = tm.trip_id AND tm.user_id = $1
-       LEFT JOIN bookings b ON t.id = b.trip_id
-       LEFT JOIN expenses e ON t.id = e.trip_id
        WHERE t.created_by = $1 OR tm.user_id = $1
        GROUP BY t.id, tm.role
        ORDER BY t.start_date ASC`,
@@ -213,11 +220,16 @@ async function getTripById(req, res, next) {
               t_opt.mode AS transport_mode, t_opt.operator AS transport_operator, t_opt.number AS transport_number,
               t_opt.origin_code AS transport_origin, t_opt.destination_code AS transport_destination,
               t_opt.departs_at AS transport_departs, t_opt.arrives_at AS transport_arrives, t_opt.class AS transport_class,
-              s.seat_no
+              COALESCE(s.seat_no, '') AS seat_no
        FROM bookings b
        LEFT JOIN hotels h ON b.hotel_id = h.id
        LEFT JOIN transport_options t_opt ON b.transport_id = t_opt.id
-       LEFT JOIN seats s ON s.booking_id = b.id
+       LEFT JOIN (
+           SELECT booking_id, string_agg(seat_no, ', ' ORDER BY seat_no) AS seat_no
+           FROM seats
+           WHERE booking_id IS NOT NULL
+           GROUP BY booking_id
+       ) s ON s.booking_id = b.id
        WHERE b.trip_id = $1
        ORDER BY b.created_at DESC`,
       [tripId]

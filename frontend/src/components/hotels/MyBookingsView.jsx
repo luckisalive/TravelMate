@@ -361,11 +361,16 @@ export default function MyBookingsView({ onExploreHotels, onExploreTransport }) 
                           <span>{transport.destination?.city} ({transport.destination?.code})</span>
                         </div>
 
-                        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                           <span className="text-amber-700 dark:text-amber-400 font-semibold flex items-center gap-1">
                             <Armchair className="w-3.5 h-3.5" />
                             <span>Seat {transport.seat_no || 'Standard'}</span>
                           </span>
+                          {(booking.passenger_name || transport.passenger_name) && (
+                            <span className="font-semibold text-slate-700 dark:text-slate-300">
+                              • Traveler: {booking.passenger_name || transport.passenger_name}
+                            </span>
+                          )}
                           {booking.trip_name && (
                             <span className="truncate text-blue-600 dark:text-blue-400 font-medium">
                               • {booking.trip_name}

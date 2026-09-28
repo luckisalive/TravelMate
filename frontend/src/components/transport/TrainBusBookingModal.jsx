@@ -10,7 +10,10 @@ import {
   Sparkles,
   MapPin,
   Calendar,
-  Clock
+  Clock,
+  Plus,
+  Trash2,
+  Users
 } from 'lucide-react';
 import api from '../../services/api';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -22,21 +25,59 @@ export default function TrainBusBookingModal({ isOpen, onClose, transport, onBoo
   const toast = useToast();
   const { displayCurrency, formatPrice } = useCurrency();
 
-  const [passengerName, setPassengerName] = useState(user?.name || '');
+  // Multi-passenger state
+  const [passengers, setPassengers] = useState(['']);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
+  // Trips state
+  const [trips, setTrips] = useState([]);
+  const [selectedTripId, setSelectedTripId] = useState('');
+  const [newTripName, setNewTripName] = useState('');
+  const [isCreatingTrip, setIsCreatingTrip] = useState(false);
+
   useEffect(() => {
-    if (user?.name && !passengerName) {
-      setPassengerName(user.name);
+    if (user?.name) {
+      setPassengers([user.name]);
+    } else {
+      setPassengers(['']);
     }
-  }, [user]);
+  }, [user, isOpen]);
+
+  // Load user trips when modal is open and authenticated
+  useEffect(() => {
+    if (isOpen && user) {
+      async function loadTrips() {
+        try {
+          const res = await api.get('/trips');
+          if (res.data?.success && Array.isArray(res.data.data)) {
+            setTrips(res.data.data);
+            if (res.data.data.length > 0) {
+              setSelectedTripId(res.data.data[0].id.toString());
+              setIsCreatingTrip(false);
+            } else {
+              setIsCreatingTrip(true);
+              setNewTripName(`Trip to ${transport?.destination?.city || 'Destination'}`);
+            }
+          }
+        } catch (err) {
+          console.warn('Could not load user trips', err);
+          setIsCreatingTrip(true);
+          setNewTripName(`Trip to ${transport?.destination?.city || 'Destination'}`);
+        }
+      }
+      loadTrips();
+    }
+  }, [isOpen, user, transport?.destination?.city]);
 
   if (!isOpen || !transport) return null;
 
   const isTrain = transport.mode === 'train';
   const ModeIcon = isTrain ? Train : Bus;
-  const priceInfo = formatPrice(transport.price);
+  const singlePrice = parseFloat(transport.price) || 0;
+  const totalPrice = singlePrice * passengers.length;
+  const singlePriceInfo = formatPrice(singlePrice);
+  const totalPriceInfo = formatPrice(totalPrice);
 
   const departureDate = new Date(transport.departs_at).toLocaleDateString('en-IN', {
     weekday: 'short',
@@ -50,11 +91,34 @@ export default function TrainBusBookingModal({ isOpen, onClose, transport, onBoo
     minute: '2-digit',
   });
 
+  const handlePassengerChange = (index, value) => {
+    setPassengers((prev) => {
+      const copy = [...prev];
+      copy[index] = value;
+      return copy;
+    });
+  };
+
+  const handleAddPassenger = () => {
+    if (passengers.length >= 8) return;
+    setPassengers((prev) => [...prev, '']);
+  };
+
+  const handleRemovePassenger = (index) => {
+    if (passengers.length <= 1) return;
+    setPassengers((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleConfirmReservation = async () => {
     if (!user) {
-      onOpenAuth('login');
+      if (onOpenAuth) onOpenAuth('login');
       return;
     }
+
+    // Validate that passengers have names
+    const cleanedPassengers = passengers.map((p, idx) => ({
+      name: p.trim() || (idx === 0 ? user.name : `Traveler ${idx + 1}`),
+    }));
 
     setIsSubmitting(true);
     setErrorMessage(null);
@@ -62,15 +126,25 @@ export default function TrainBusBookingModal({ isOpen, onClose, transport, onBoo
     try {
       const payload = {
         transport_id: transport.id,
-        passenger_name: passengerName.trim() || user.name,
+        passengers: cleanedPassengers,
         currency: displayCurrency,
       };
+
+      if (isCreatingTrip || !selectedTripId) {
+        payload.new_trip_name = newTripName.trim() || `Trip to ${transport.destination?.city || 'Destination'} (${departureDate})`;
+      } else {
+        payload.trip_id = parseInt(selectedTripId, 10);
+      }
 
       const res = await api.post('/bookings/transport', payload);
 
       if (res.data?.success) {
-        toast.success(`${isTrain ? 'Train ticket' : 'Bus ticket'} reserved! PNR #${res.data.data.booking.reference_code}`);
-        onBookingSuccess(res.data.data);
+        const count = cleanedPassengers.length;
+        const msg = `${count} ${isTrain ? 'train ticket(s)' : 'bus ticket(s)'} reserved!`;
+        toast.success(msg);
+        if (onBookingSuccess) {
+          onBookingSuccess(res.data.data);
+        }
         onClose();
       }
     } catch (err) {
@@ -122,7 +196,7 @@ export default function TrainBusBookingModal({ isOpen, onClose, transport, onBoo
           </div>
         )}
 
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
           {/* Trip Summary Card */}
           <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200 dark:border-slate-700/60 space-y-3">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -140,28 +214,115 @@ export default function TrainBusBookingModal({ isOpen, onClose, transport, onBoo
             </div>
           </div>
 
-          {/* Passenger Form */}
-          <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200 dark:border-slate-700/60 space-y-2">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200">
-              Passenger Name
-            </label>
-            <input
-              type="text"
-              value={passengerName}
-              onChange={(e) => setPassengerName(e.target.value)}
-              placeholder="Enter traveler name"
-              className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          {/* Trip Selection */}
+          {user && (
+            <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200 dark:border-slate-700/60 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Attach to Trip
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsCreatingTrip(!isCreatingTrip)}
+                  className="text-[11px] text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold cursor-pointer"
+                >
+                  {isCreatingTrip ? 'Select Existing Trip' : '+ Create New Trip'}
+                </button>
+              </div>
+
+              {isCreatingTrip ? (
+                <input
+                  type="text"
+                  placeholder="e.g. Goa Monsoon Vacation 2026"
+                  value={newTripName}
+                  onChange={(e) => setNewTripName(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              ) : (
+                <select
+                  value={selectedTripId}
+                  onChange={(e) => setSelectedTripId(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                >
+                  {trips.length > 0 ? (
+                    trips.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} ({t.start_date})
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No existing trips - new trip will be created</option>
+                  )}
+                </select>
+              )}
+            </div>
+          )}
+
+          {/* Travelers / Multi-Passenger Form */}
+          <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200 dark:border-slate-700/60 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                  Travelers ({passengers.length})
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddPassenger}
+                disabled={passengers.length >= 8}
+                className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center gap-1 cursor-pointer disabled:opacity-40"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Traveler</span>
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {passengers.map((name, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                      {idx === 0 ? 'Passenger 1 (Primary / Lead Traveler)' : `Passenger ${idx + 1}`}
+                    </div>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => handlePassengerChange(idx, e.target.value)}
+                      placeholder={idx === 0 ? 'Enter primary traveler name' : `Enter traveler ${idx + 1} name`}
+                      className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {passengers.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePassenger(idx)}
+                      className="mt-4 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl transition-colors cursor-pointer"
+                      title="Remove traveler"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
             <p className="text-[10px] text-slate-400 dark:text-slate-500">
-              Ticket and e-voucher will be issued under this name.
+              An individual verified ticket will be generated for each traveler.
             </p>
           </div>
 
           {/* Price Breakdown */}
           <div className="bg-slate-50 dark:bg-slate-800/40 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 space-y-2">
             <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
-              <span>Standard Base Fare</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200">{priceInfo.formatted}</span>
+              <span>Fare per Ticket</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">{singlePriceInfo.formatted}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
+              <span>Number of Travelers</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">{passengers.length}</span>
             </div>
             <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
               <span>Reservation & Platform Charges</span>
@@ -171,11 +332,11 @@ export default function TrainBusBookingModal({ isOpen, onClose, transport, onBoo
               <span className="font-bold text-xs text-slate-900 dark:text-white">Total Amount</span>
               <div className="text-right">
                 <div className="font-extrabold text-lg text-slate-900 dark:text-white">
-                  {priceInfo.formatted}
+                  {totalPriceInfo.formatted}
                 </div>
-                {priceInfo.secondary && (
+                {totalPriceInfo.secondary && (
                   <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                    {priceInfo.secondary}
+                    {totalPriceInfo.secondary}
                   </div>
                 )}
               </div>
@@ -197,7 +358,9 @@ export default function TrainBusBookingModal({ isOpen, onClose, transport, onBoo
             ) : (
               <>
                 <ShieldCheck className="w-4 h-4" />
-                <span>Confirm & Issue Ticket</span>
+                <span>
+                  Confirm & Issue {passengers.length} {passengers.length === 1 ? 'Ticket' : 'Tickets'}
+                </span>
               </>
             )}
           </button>

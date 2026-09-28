@@ -102,6 +102,7 @@ CREATE TABLE bookings (
     trip_id INT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
     hotel_id INT REFERENCES hotels(id) ON DELETE SET NULL,
     transport_id INT REFERENCES transport_options(id) ON DELETE SET NULL,
+    passenger_name VARCHAR(255),
     check_in DATE,                                         -- For hotel stays
     check_out DATE,                                        -- For hotel stays
     status VARCHAR(20) NOT NULL DEFAULT 'confirmed' 

@@ -212,6 +212,7 @@ async function createTransportBooking(req, res, next) {
       trip_id,
       new_trip_name,
       passenger_name,
+      passengers,
       currency,
     } = req.body;
 
@@ -220,6 +221,20 @@ async function createTransportBooking(req, res, next) {
         success: false,
         error: { message: 'Transport ID is required.' },
       });
+    }
+
+    // Build normalized list of passengers
+    let passengersList = [];
+    if (Array.isArray(passengers) && passengers.length > 0) {
+      passengersList = passengers.map((p, idx) => ({
+        name: (p.name && typeof p.name === 'string' && p.name.trim()) ? p.name.trim() : (idx === 0 ? req.user.name : `Traveler ${idx + 1}`),
+        seat_no: (p.seat_no && typeof p.seat_no === 'string') ? p.seat_no.trim().toUpperCase() : (seat_no ? seat_no.trim().toUpperCase() : null),
+      }));
+    } else {
+      passengersList = [{
+        name: (passenger_name && passenger_name.trim()) || req.user.name,
+        seat_no: seat_no ? seat_no.trim().toUpperCase() : null,
+      }];
     }
 
     await client.query('BEGIN');
@@ -248,38 +263,52 @@ async function createTransportBooking(req, res, next) {
     const transport = transportResult.rows[0];
 
     // 2. Validate seat selection for flights (PRD Section 11 & ADR-005)
-    let selectedSeatNo = seat_no ? seat_no.trim().toUpperCase() : null;
-
     if (transport.mode === 'flight') {
-      if (!selectedSeatNo) {
+      for (let i = 0; i < passengersList.length; i++) {
+        if (!passengersList[i].seat_no) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({
+            success: false,
+            error: { message: `Flight booking requires a selected seat number for each passenger (traveler ${i + 1}).` },
+          });
+        }
+      }
+
+      // Check for duplicate seat selections within the same request
+      const requestedSeatNos = passengersList.map((p) => p.seat_no);
+      const uniqueSeatNos = new Set(requestedSeatNos);
+      if (uniqueSeatNos.size !== requestedSeatNos.length) {
         await client.query('ROLLBACK');
         return res.status(400).json({
           success: false,
-          error: { message: 'Flight booking requires a selected seat number (e.g. 14B).' },
+          error: { message: 'Duplicate seats selected in booking request. Each passenger must have a distinct seat.' },
         });
       }
 
-      // Check if seat exists and is currently available with lock
+      // Check if seats exist and are available with lock
       const seatCheck = await client.query(
-        `SELECT id, booking_id FROM seats 
-         WHERE transport_id = $1 AND seat_no = $2 
+        `SELECT id, seat_no, booking_id FROM seats 
+         WHERE transport_id = $1 AND seat_no = ANY($2::varchar[]) 
          FOR UPDATE`,
-        [transport.id, selectedSeatNo]
+        [transport.id, requestedSeatNos]
       );
 
-      if (seatCheck.rows.length === 0) {
+      if (seatCheck.rows.length !== requestedSeatNos.length) {
+        const found = new Set(seatCheck.rows.map((r) => r.seat_no));
+        const missing = requestedSeatNos.find((s) => !found.has(s));
         await client.query('ROLLBACK');
         return res.status(404).json({
           success: false,
-          error: { message: `Seat ${selectedSeatNo} does not exist on this flight.` },
+          error: { message: `Seat ${missing} does not exist on this flight.` },
         });
       }
 
-      if (seatCheck.rows[0].booking_id !== null) {
+      const alreadyBooked = seatCheck.rows.find((r) => r.booking_id !== null);
+      if (alreadyBooked) {
         await client.query('ROLLBACK');
         return res.status(409).json({
           success: false,
-          error: { message: `Seat ${selectedSeatNo} is already booked. Please choose another seat.` },
+          error: { message: `Seat ${alreadyBooked.seat_no} is already booked. Please choose another seat.` },
         });
       }
     }
@@ -327,99 +356,118 @@ async function createTransportBooking(req, res, next) {
     }
 
     // 4. Calculate prices with immutable currency conversion
-    const amountBase = parseFloat(transport.price);
+    const amountBaseSingle = parseFloat(transport.price);
     const targetCurrency = (currency || req.user.display_currency || 'INR').toUpperCase();
     const rateUsed = await getExchangeRateForCurrency(targetCurrency);
-    const amount = parseFloat((amountBase * rateUsed).toFixed(2));
+    const amountSingle = parseFloat((amountBaseSingle * rateUsed).toFixed(2));
 
-    // 5. Insert booking into `bookings` table
-    const bookingResult = await client.query(
-      `INSERT INTO bookings (
-         user_id, trip_id, transport_id, check_in, check_out,
-         status, amount, currency, amount_base, rate_used
-       ) VALUES ($1, $2, $3, $4, $5, 'confirmed', $6, $7, $8, $9)
-       RETURNING *`,
-      [
-        req.user.id,
-        resolvedTripId,
-        transport.id,
-        departsDate,
-        arrivesDate,
-        amount,
-        targetCurrency,
-        amountBase,
-        rateUsed,
-      ]
-    );
-
-    const booking = bookingResult.rows[0];
-
-    // 6. Concurrency-Safe Atomic Seat Assignment (ADR-005)
-    if (selectedSeatNo) {
-      const seatUpdate = await client.query(
-        `UPDATE seats 
-         SET booking_id = $1 
-         WHERE transport_id = $2 AND seat_no = $3 AND booking_id IS NULL
-         RETURNING id, seat_no`,
-        [booking.id, transport.id, selectedSeatNo]
+    // 5. Insert individual booking for each passenger
+    const createdBookings = [];
+    for (const p of passengersList) {
+      const bookingResult = await client.query(
+        `INSERT INTO bookings (
+           user_id, trip_id, transport_id, passenger_name, check_in, check_out,
+           status, amount, currency, amount_base, rate_used
+         ) VALUES ($1, $2, $3, $4, $5, $6, 'confirmed', $7, $8, $9, $10)
+         RETURNING *`,
+        [
+          req.user.id,
+          resolvedTripId,
+          transport.id,
+          p.name,
+          departsDate,
+          arrivesDate,
+          amountSingle,
+          targetCurrency,
+          amountBaseSingle,
+          rateUsed,
+        ]
       );
 
-      if (seatUpdate.rowCount === 0) {
-        await client.query('ROLLBACK');
-        return res.status(409).json({
-          success: false,
-          error: { message: `Seat ${selectedSeatNo} was just reserved by another traveler. Please select a different seat.` },
-        });
+      const booking = bookingResult.rows[0];
+
+      // 6. Concurrency-Safe Atomic Seat Assignment (ADR-005)
+      if (p.seat_no) {
+        const seatUpdate = await client.query(
+          `UPDATE seats 
+           SET booking_id = $1 
+           WHERE transport_id = $2 AND seat_no = $3 AND booking_id IS NULL
+           RETURNING id, seat_no`,
+          [booking.id, transport.id, p.seat_no]
+        );
+
+        if (seatUpdate.rowCount === 0) {
+          await client.query('ROLLBACK');
+          return res.status(409).json({
+            success: false,
+            error: { message: `Seat ${p.seat_no} was just reserved by another traveler. Please select a different seat.` },
+          });
+        }
       }
+
+      createdBookings.push({
+        ...booking,
+        passenger_name: p.name,
+        seat_no: p.seat_no || 'Standard / Unreserved',
+      });
     }
 
     // 7. Create in-app notification
-    const passName = (passenger_name && passenger_name.trim()) || req.user.name;
-    const seatInfo = selectedSeatNo ? `Seat ${selectedSeatNo}` : 'Ticket Confirmed';
+    const passengerSummary = createdBookings
+      .map((b) => (b.seat_no && b.seat_no !== 'Standard / Unreserved' ? `${b.passenger_name} (Seat ${b.seat_no})` : b.passenger_name))
+      .join(', ');
+
     await client.query(
       `INSERT INTO notifications (user_id, type, message)
        VALUES ($1, 'booking', $2)`,
       [
         req.user.id,
-        `Transport booking confirmed: ${transport.operator} ${transport.number} (${transport.origin_city} → ${transport.dest_city}) for ${passName}. ${seatInfo}.`,
+        `Transport booking confirmed: ${transport.operator} ${transport.number} (${transport.origin_city} → ${transport.dest_city}) for ${createdBookings.length} passenger(s) (${passengerSummary}).`,
       ]
     );
 
     // 8. Auto-link to itinerary
     const departsTime = new Date(transport.departs_at).toISOString().split('T')[1].substring(0, 5);
-    await client.query(
-      `INSERT INTO itinerary_items (trip_id, day_number, position, time, title, notes, booking_id)
-       VALUES ($1, 1, 0, $2, $3, $4, $5)`,
-      [
-        resolvedTripId,
-        departsTime,
-        `Departure: ${transport.operator} ${transport.number}`,
-        `${transport.mode.toUpperCase()} from ${transport.origin_city} (${transport.origin_code}) to ${transport.dest_city} (${transport.destination_code}) - ${seatInfo}`,
-        booking.id,
-      ]
-    );
+    for (const b of createdBookings) {
+      const seatInfo = b.seat_no && b.seat_no !== 'Standard / Unreserved' ? `Seat ${b.seat_no}` : 'Ticket Confirmed';
+      await client.query(
+        `INSERT INTO itinerary_items (trip_id, day_number, position, time, title, notes, booking_id)
+         VALUES ($1, 1, 0, $2, $3, $4, $5)`,
+        [
+          resolvedTripId,
+          departsTime,
+          `Departure: ${transport.operator} ${transport.number} (${b.passenger_name})`,
+          `${transport.mode.toUpperCase()} from ${transport.origin_city} (${transport.origin_code}) to ${transport.dest_city} (${transport.destination_code}) - Traveler: ${b.passenger_name} - ${seatInfo}`,
+          b.id,
+        ]
+      );
+    }
 
     await client.query('COMMIT');
 
-    const refCode = `TM-TRP-${booking.id.toString().padStart(6, '0')}`;
+    const formattedBookings = createdBookings.map((b) => ({
+      id: b.id,
+      reference_code: `TM-TRP-${b.id.toString().padStart(6, '0')}`,
+      status: b.status,
+      departs_at: transport.departs_at,
+      arrives_at: transport.arrives_at,
+      passenger_name: b.passenger_name,
+      seat_no: b.seat_no,
+      amount: parseFloat(b.amount),
+      currency: b.currency,
+      amount_base: parseFloat(b.amount_base),
+      rate_used: parseFloat(b.rate_used),
+      created_at: b.created_at,
+    }));
 
     return res.status(201).json({
       success: true,
       data: {
-        booking: {
-          id: booking.id,
-          reference_code: refCode,
-          status: booking.status,
-          departs_at: transport.departs_at,
-          arrives_at: transport.arrives_at,
-          passenger_name: passName,
-          seat_no: selectedSeatNo || 'Standard / Unreserved',
-          amount: parseFloat(booking.amount),
-          currency: booking.currency,
-          amount_base: parseFloat(booking.amount_base),
-          rate_used: parseFloat(booking.rate_used),
-          created_at: booking.created_at,
-        },
+        booking: formattedBookings[0],
+        bookings: formattedBookings,
+        total_passengers: formattedBookings.length,
+        total_amount: parseFloat((amountSingle * formattedBookings.length).toFixed(2)),
+        total_amount_base: parseFloat((amountBaseSingle * formattedBookings.length).toFixed(2)),
         transport: {
           id: transport.id,
           mode: transport.mode,
@@ -442,7 +490,7 @@ async function createTransportBooking(req, res, next) {
         },
         trip_id: resolvedTripId,
       },
-      message: 'Transport booking confirmed successfully.',
+      message: `${formattedBookings.length} transport ticket(s) confirmed successfully.`,
     });
   } catch (err) {
     await client.query('ROLLBACK');
@@ -502,14 +550,19 @@ async function getMyBookings(req, res, next) {
               tr.arrives_at AS transport_arrives_at,
               s_orig.code AS origin_code, s_orig.name AS origin_name, s_orig.city AS origin_city,
               s_dest.code AS dest_code, s_dest.name AS dest_name, s_dest.city AS dest_city,
-              s.seat_no AS seat_no,
+              COALESCE(s.seat_no, '') AS seat_no,
               t.name AS trip_name
        FROM bookings b
        LEFT JOIN hotels h ON b.hotel_id = h.id
        LEFT JOIN transport_options tr ON b.transport_id = tr.id
        LEFT JOIN stations s_orig ON tr.origin_code = s_orig.code
        LEFT JOIN stations s_dest ON tr.destination_code = s_dest.code
-       LEFT JOIN seats s ON s.booking_id = b.id
+       LEFT JOIN (
+           SELECT booking_id, string_agg(seat_no, ', ' ORDER BY seat_no) AS seat_no
+           FROM seats
+           WHERE booking_id IS NOT NULL
+           GROUP BY booking_id
+       ) s ON s.booking_id = b.id
        LEFT JOIN trips t ON b.trip_id = t.id
        WHERE ${whereClause}
        ORDER BY b.created_at DESC
@@ -527,6 +580,7 @@ async function getMyBookings(req, res, next) {
         type: row.hotel_id ? 'hotel' : 'transport',
         trip_id: row.trip_id,
         trip_name: row.trip_name,
+        passenger_name: row.passenger_name,
         check_in: row.check_in,
         check_out: row.check_out,
         status: row.status,
@@ -554,6 +608,7 @@ async function getMyBookings(req, res, next) {
               number: row.transport_number,
               class: row.transport_class,
               seat_no: row.seat_no || 'Standard',
+              passenger_name: row.passenger_name,
               departs_at: row.transport_departs_at,
               arrives_at: row.transport_arrives_at,
               origin: {
@@ -603,14 +658,19 @@ async function getBookingById(req, res, next) {
               tr.arrives_at AS transport_arrives_at,
               s_orig.code AS origin_code, s_orig.name AS origin_name, s_orig.city AS origin_city,
               s_dest.code AS dest_code, s_dest.name AS dest_name, s_dest.city AS dest_city,
-              s.seat_no AS seat_no,
+              COALESCE(s.seat_no, '') AS seat_no,
               t.name AS trip_name
        FROM bookings b
        LEFT JOIN hotels h ON b.hotel_id = h.id
        LEFT JOIN transport_options tr ON b.transport_id = tr.id
        LEFT JOIN stations s_orig ON tr.origin_code = s_orig.code
        LEFT JOIN stations s_dest ON tr.destination_code = s_dest.code
-       LEFT JOIN seats s ON s.booking_id = b.id
+       LEFT JOIN (
+           SELECT booking_id, string_agg(seat_no, ', ' ORDER BY seat_no) AS seat_no
+           FROM seats
+           WHERE booking_id IS NOT NULL
+           GROUP BY booking_id
+       ) s ON s.booking_id = b.id
        LEFT JOIN trips t ON b.trip_id = t.id
        WHERE b.id = $1 AND b.user_id = $2`,
       [bookingId, req.user.id]
@@ -636,6 +696,7 @@ async function getBookingById(req, res, next) {
         type: row.hotel_id ? 'hotel' : 'transport',
         trip_id: row.trip_id,
         trip_name: row.trip_name,
+        passenger_name: row.passenger_name,
         check_in: row.check_in,
         check_out: row.check_out,
         status: row.status,
@@ -663,6 +724,7 @@ async function getBookingById(req, res, next) {
               number: row.transport_number,
               class: row.transport_class,
               seat_no: row.seat_no || 'Standard',
+              passenger_name: row.passenger_name,
               departs_at: row.transport_departs_at,
               arrives_at: row.transport_arrives_at,
               origin: {
